@@ -1,10 +1,10 @@
-# 2026-09-16 — SSH brute-force + martian spoofing campaign (miel26 self-DoS)
+# 2026-09-16: SSH brute-force + martian spoofing campaign (miel26 self-DoS)
 
 First large-scale campaign captured by the lab. Two attacker IPs ran an automated
 SSH dropper/recon campaign against the honeypot, and the traffic surge coincided
 with a **~14-hour telemetry blackout**: Wazuh agent 001 stopped reporting at
 07:33:59 UTC and only recovered after a manual reboot at 21:32 UTC. During the
-blackout the honeypot was attacked — and blind.
+blackout the honeypot was attacked and blind.
 
 ## Attackers
 
@@ -19,13 +19,13 @@ Both IPs also spoofed the honeypot's Docker bridge IP (`172.17.0.2`) as source.
 
 | Time | Event |
 |------|-------|
-| 05:00–07:33 | Alert surge on agent 001: 15,131 alerts (10,049 in the 06:00 hour) |
+| 05:00-07:33 | Alert surge on agent 001: 15,131 alerts (10,049 in the 06:00 hour) |
 | 06:56:09 | `109.160.32.48` starts scripted SSH campaign against fake SSH (`172.17.0.2:2222`) |
 | 06:57:17 | Second source `195.178.110.228` joins |
 | 07:06:31 | Kernel: `workqueue: update_balloon_size_func [virtio_balloon] hogged CPU` (GCP memory pressure during surge) |
 | 07:13:56 | Last Cowrie event from `109.160.32.48` |
 | 07:33:59 | **Last alert from agent 001** (rule 504, agent disconnected). Telemetry path (Tailscale :1514) dies |
-| 08:00–20:59 | **Telemetry blackout** — zero alerts from agent 001; honeypot keeps running but is blind |
+| 08:00-20:59 | **Telemetry blackout**, zero alerts from agent 001; honeypot keeps running but is blind |
 | 08:21:54 | First kernel martian log: `IPv4: martian source 172.17.0.2 from 109.160.32.48, on dev ens4` (continues, rate-limited) |
 | 19:57:24 | Martian packets also observed from `195.178.110.228` |
 | 21:26:12 | Last martian log; boot -1 ends (manual reboot) |
@@ -49,14 +49,14 @@ Both IPs also spoofed the honeypot's Docker bridge IP (`172.17.0.2`) as source.
 ## Impact
 
 - **Honeypot self-DoS / observability loss**: 13.5 hours with zero telemetry
-  (07:33:59 → 21:38:08). Every attack in that window — including the entire
-  spoofing campaign — is unobserved by design.
+  (07:33:59 → 21:38:08). Every attack in that window, including the entire
+  spoofing campaign, is unobserved by design.
 - The spoofing itself was dropped by the kernel (no direct impact evidenced),
   but it proves the attacker can inject packets into the honeypot's underlay.
 - Contributing factor that lengthened the outage: `wazuh-agent` was **not
   enabled** after install, so nothing self-healed; a manual reboot was required.
 
-## Analysis — evidence vs. hypothesis
+## Analysis: evidence vs. hypothesis
 
 **Confirmed by evidence:**
 - The brute-force window, volumes, TTP commands, and both attacker IPs
@@ -68,7 +68,7 @@ Both IPs also spoofed the honeypot's Docker bridge IP (`172.17.0.2`) as source.
 **Hypothesis (corrected):** an earlier working theory blamed the spoofing flood
 for the telemetry loss. The timeline does not support that: the agent's last
 alert (07:33:59) predates the first surviving martian log (08:21:54). The
-better-supported reading is that the **05:00–07:33 traffic surge** (~15k alerts,
+better-supported reading is that the **05:00-07:33 traffic surge** (~15k alerts,
 ~200 rapid scripted SSH sessions, `virtio_balloon` CPU hog at 07:06 on a
 1 GB e2-micro) broke the guest's Tailscale/telemetry path. No OOM-kill and no
 `nf_conntrack: table full` lines were found in the pre-reboot kernel journal.
@@ -77,7 +77,7 @@ better-supported reading is that the **05:00–07:33 traffic surge** (~15k alert
 - Exact root cause of the 07:34 telemetry death (candidates: resource
   exhaustion, conntrack pressure; no `conntrack` tool installed to measure).
 - Why the spoofing stopped at the reboot (attacker withdrew vs. GCP-side
-  filtering) — unknown.
+  filtering), unknown.
 - True spoofing rate: kernel log lines are rate-limited (~10 min apart).
 
 ## Evidence (reproducible)
@@ -94,7 +94,7 @@ curl -sk -u 'admin:***' 'https://localhost:9200/wazuh-alerts-4.x-*/_search' \
            "min_ts": {"min": {"field": "@timestamp"}},
            "max_ts": {"max": {"field": "@timestamp"}}}'
 
-# Agent 001 hourly activity on 09-16 (shows the 08:00–20:59 hole)
+# Agent 001 hourly activity on 09-16 (shows the 08:00-20:59 hole)
 curl -sk -u 'admin:***' 'https://localhost:9200/wazuh-alerts-4.x-2026.09.16/_search' \
   -H 'Content-Type: application/json' -d '{
   "size": 0, "query": {"term": {"agent.id": "001"}},
@@ -122,7 +122,7 @@ sudo journalctl -b -1 -k --since "2026-09-16 07:00" --until "2026-09-16 09:00" |
 
 | Action | Status |
 |--------|--------|
-| Reboot miel26 + `systemctl enable --now wazuh-agent` | ✅ done 09-16 21:32–21:38 UTC; agent enabled, now auto-starts |
+| Reboot miel26 + `systemctl enable --now wazuh-agent` | ✅ done 09-16 21:32-21:38 UTC; agent enabled, now auto-starts |
 | Telemetry confirmed (rule 503 connected; alerts flowing) | ✅ done |
 | Block attacker IPs at GCP VPC firewall | ⬜ → `08-endurecimiento/` |
 | Restrict 2222 ingress to operator IP | ⬜ → `08-endurecimiento/` |

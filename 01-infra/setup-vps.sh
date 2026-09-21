@@ -6,7 +6,7 @@ set -euo pipefail
 # --- Configuration: fill all three before running ------------------------------
 WAZUH_MANAGER_IP=""    # Tailscale IP of Machine A, from 'tailscale ip -4' on the always-on server.
 WAZUH_AUTH_PASSWORD="" # Wazuh agent enrollment password, from Machine A's /opt/wazuh-docker/wazuh-docker/.env.local.
-HOME_IP=""             # Your home public IP — used to block self from hitting the honeypot.
+HOME_IP=""             # Your home public IP, used to block self from hitting the honeypot.
 
 echo "=== 1. Sanity and configuration check ==="
 # Never run half-configured: every value is required before any mutation happens.
@@ -15,9 +15,9 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 MISSING=()
-[ -n "$WAZUH_MANAGER_IP" ] || MISSING+=("WAZUH_MANAGER_IP — Tailscale IP of Machine A, from 'tailscale ip -4' on the always-on server")
-[ -n "$WAZUH_AUTH_PASSWORD" ] || MISSING+=("WAZUH_AUTH_PASSWORD — Wazuh agent enrollment password, from Machine A's /opt/wazuh-docker/wazuh-docker/.env.local")
-[ -n "$HOME_IP" ] || MISSING+=("HOME_IP — your home public IP, used to keep your own scans off the honeypot")
+[ -n "$WAZUH_MANAGER_IP" ] || MISSING+=("WAZUH_MANAGER_IP: Tailscale IP of Machine A, from 'tailscale ip -4' on the always-on server")
+[ -n "$WAZUH_AUTH_PASSWORD" ] || MISSING+=("WAZUH_AUTH_PASSWORD: Wazuh agent enrollment password, from Machine A's /opt/wazuh-docker/wazuh-docker/.env.local")
+[ -n "$HOME_IP" ] || MISSING+=("HOME_IP: your home public IP, used to keep your own scans off the honeypot")
 if [ "${#MISSING[@]}" -gt 0 ]; then
   echo "ERROR: missing configuration:" >&2
   for m in "${MISSING[@]}"; do
@@ -36,7 +36,7 @@ else
 fi
 # Validate the config before restarting so a typo cannot lock us out.
 sshd -t
-echo "WARNING: SSH moves to port 2222 on the next line. Reconnect with 'ssh -p 2222 user@host' before closing this session — the restart will drop this one."
+echo "WARNING: SSH moves to port 2222 on the next line. Reconnect with 'ssh -p 2222 user@host' before closing this session. The restart will drop this one."
 systemctl restart ssh
 
 echo "=== 3. ufw: default deny, honeypot ports open to the world ==="
@@ -51,11 +51,11 @@ ufw allow 80/tcp
 ufw allow 445/tcp
 ufw allow 3389/tcp
 ufw allow 3306/tcp
-# Management SSH — restrict to the operator IP only (defense in depth; also
+# Management SSH: restrict to the operator IP only (defense in depth; also
 # restrict it in the GCP VPC firewall). If your public IP is dynamic, keep 2222
 # reachable via Tailscale instead of widening this, or you will lock yourself out.
 ufw allow from "$HOME_IP" to any port 2222
-# NEVER allow the Wazuh ports (9200/55000/11300/1514/1515) here — tailnet-only by design.
+# NEVER allow the Wazuh ports (9200/55000/11300/1514/1515) here, tailnet-only by design.
 ufw --force enable
 
 echo "=== 4. (fail2ban intentionally omitted) ==="
@@ -70,13 +70,13 @@ apt-get install -y docker.io docker-compose-v2 git
 if ! command -v tailscale >/dev/null 2>&1; then
   curl -fsSL https://tailscale.com/install.sh | sh
 fi
-echo "NEXT (manual): run 'tailscale up' on this VPS — same tailnet as the always-on server."
+echo "NEXT (manual): run 'tailscale up' on this VPS, same tailnet as the always-on server."
 
 echo "=== 6. Cowrie honeypot ==="
 mkdir -p /opt/honeypot/cowrie
-# Canonical compose file — also kept at 02-honeypot/docker-compose.yaml in this repo.
+# Canonical compose file, also kept at 02-honeypot/docker-compose.yaml in this repo.
 cat > /opt/honeypot/cowrie/docker-compose.yaml <<'EOF'
-# Cowrie honeypot — low-interaction SSH/Telnet/HTTP/SMB/RDP/MySQL trap.
+# Cowrie honeypot, low-interaction SSH/Telnet/HTTP/SMB/RDP/MySQL trap.
 # Ports here are INTENTIONALLY exposed to the internet: that is the product.
 services:
   cowrie:

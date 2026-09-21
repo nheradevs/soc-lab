@@ -11,11 +11,11 @@ if [ "$EUID" -ne 0 ]; then
 fi
 . /etc/os-release
 if [ "$ID" != "ubuntu" ] || [ "$VERSION_ID" != "24.04" ]; then
-  echo "WARNING: targets Ubuntu 24.04 but detected '$ID $VERSION_ID' — aborting." >&2
+  echo "WARNING: targets Ubuntu 24.04 but detected '$ID $VERSION_ID', aborting." >&2
   exit 1
 fi
 if [ -d /opt/wazuh-docker ]; then
-  echo "already provisioned — nothing to do"
+  echo "already provisioned, nothing to do"
   exit 0
 fi
 
@@ -40,7 +40,7 @@ powerprofilesctl set performance || true
 echo "=== 4. Swap: 6 GB file (headroom for OpenSearch) ==="
 SWAP_ACTIVE=$(swapon --show=NAME 2>/dev/null || true)
 if printf '%s\n' "$SWAP_ACTIVE" | grep -qx '/swapfile'; then
-  echo "/swapfile already active — skipping."
+  echo "/swapfile already active, skipping."
 else
   fallocate -l 6G /swapfile
   chmod 600 /swapfile
@@ -135,7 +135,7 @@ echo "=== 11. Summary ==="
 HOST_IP=$(hostname -I | awk '{print $1}')
 [ -n "$HOST_IP" ] || HOST_IP=$(hostname)
 echo "Wazuh dashboard: https://${HOST_IP}"
-echo "Dashboard credentials live in /opt/wazuh-docker/wazuh-docker/.env.local — change the password."
+echo "Dashboard credentials live in /opt/wazuh-docker/wazuh-docker/.env.local. Change the password."
 echo "Profile in use: ${PROFILE}"
 echo "Next manual steps:"
 echo "  1) tailscale up   (on this laptop)"

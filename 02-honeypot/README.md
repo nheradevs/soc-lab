@@ -1,6 +1,6 @@
 # 02-honeypot
 
-Cowrie is a low-interaction honeypot: it serves fake login shells (SSH, Telnet, HTTP, SMB, RDP, MySQL) that record everything — usernames, passwords, commands, exfiltration attempts — with zero risk to real services.
+Cowrie is a low-interaction honeypot: it serves fake login shells (SSH, Telnet, HTTP, SMB, RDP, MySQL) that record everything (usernames, passwords, commands, exfiltration attempts) with zero risk to real services.
 
 ## Why low-interaction
 

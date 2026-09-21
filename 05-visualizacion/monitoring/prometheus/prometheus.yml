@@ -6,12 +6,12 @@ rule_files:
   - rules.yml
 
 scrape_configs:
-  # Asgard (indexer host) — node-exporter sidecar in this compose stack.
+  # Asgard (indexer host), node-exporter sidecar in this compose stack.
   - job_name: node-asgard
     static_configs:
       - targets: ["node-exporter:9100"]
 
-  # miel26 (GCP honeypot) — standalone node-exporter bound only to its
+  # miel26 (GCP honeypot), standalone node-exporter bound only to its
   # tailscale IP; asgard reaches it over the tailnet.
   - job_name: node-miel26
     static_configs:

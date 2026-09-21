@@ -1,4 +1,4 @@
-# Cowrie honeypot — low-interaction SSH/Telnet/HTTP/SMB/RDP/MySQL trap.
+# Cowrie honeypot: low-interaction SSH/Telnet/HTTP/SMB/RDP/MySQL trap.
 # Ports here are INTENTIONALLY exposed to the internet: that is the product.
 services:
   cowrie:

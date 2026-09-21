@@ -9,7 +9,7 @@ groups:
           severity: warning
         annotations:
           summary: "Asgard root disk below 20% free"
-          description: "Asgard / free space is {{ $value | humanizePercentage }} — OpenSearch indexing is at risk."
+          description: "Asgard / free space is {{ $value | humanizePercentage }}. OpenSearch indexing is at risk."
 
       - alert: asgard_mem_low
         expr: node_memory_MemAvailable_bytes{job="node-asgard"} < 3e9
@@ -28,7 +28,7 @@ groups:
           severity: critical
         annotations:
           summary: "miel26 (honeypot) exporter unreachable"
-          description: "miel26 node-exporter has been down for 5m — honeypot may be self-DoS'd or offline."
+          description: "miel26 node-exporter has been down for 5m, honeypot may be self-DoS'd or offline."
 
       # miel26 is an e2-small (~2 GiB): watch RAM under heavy attack.
       - alert: miel26_mem_low
@@ -38,7 +38,7 @@ groups:
           severity: warning
         annotations:
           summary: "miel26 available memory below 300 MiB"
-          description: "miel26 MemAvailable is {{ $value | humanize }}B — self-DoS risk."
+          description: "miel26 MemAvailable is {{ $value | humanize }}B, self-DoS risk."
 
       # Conntrack exhaustion drops new attacker connections and looks like downtime.
       - alert: miel26_conntrack_high

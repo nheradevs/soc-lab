@@ -1,8 +1,8 @@
-# SOC lab — infra monitoring stack (Prometheus + Grafana + Wazuh→Telegram forwarder)
+# SOC lab: infra monitoring stack (Prometheus + Grafana + Wazuh→Telegram forwarder)
 #
 # Security: every published port binds to 127.0.0.1 ONLY.
 # Access Grafana via SSH tunnel:  ssh -N -L 3000:localhost:3000 asgard
-# Secrets come from ./.env (chmod 600, lives only on asgard — never committed).
+# Secrets come from ./.env (chmod 600, lives only on asgard, never committed).
 #
 # The miel26 exporter is NOT part of this stack: it runs as a standalone
 # container on miel26 bound only to the tailscale IP (see 02-honeypot / T2).

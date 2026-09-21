@@ -1,16 +1,15 @@
-# SOC lab monitoring — Prometheus + Grafana + Wazuh→Telegram forwarder
+# SOC lab monitoring, Prometheus + Grafana + Wazuh→Telegram forwarder
 
 Infrastructure-health monitoring for the SOC lab. Covers:
 
-- **Asgard** (SIEM/indexer host): disk, RAM, load — the indexer filling up
+- **Asgard** (SIEM/indexer host): disk, RAM, load, the indexer filling up
   would silently stop alert indexing, so this is the biggest blind spot.
-- **miel26** (GCP honeypot, e2-small): up/down, RAM, conntrack — self-DoS
+- **miel26** (GCP honeypot, e2-small): up/down, RAM, conntrack, self-DoS
   watch under heavy attack.
 - **Wazuh → Telegram forwarder**: the high-value events only (Cowrie fake
   logins, command input, agent events), NOT the ~10k alerts/day flood.
 
-This is infra monitoring, not security visualization — the Wazuh dashboard
-already covers security.
+This is infra monitoring, not security visualization. The Wazuh dashboard already covers security.
 
 ## Layout
 
@@ -41,7 +40,7 @@ Grafana is bound to `127.0.0.1:3000` on asgard. From your laptop:
 ssh -N -L 3000:localhost:3000 asgard
 ```
 
-Then open http://localhost:3000 — user `admin`, password is
+Then open http://localhost:3000, user `admin`, password is
 `GRAFANA_ADMIN_PASSWORD` from `~/monitoring/.env` (chmod 600).
 Sign-up is disabled. Prometheus is at `127.0.0.1:9090` the same way.
 
@@ -56,7 +55,7 @@ on the Tailscale IP:
 
 It is not in this compose file. asgard scrapes it over the tailnet
 (`100.x.x.x:9100` in `prometheus.yml`). Reason: the honeypot's only
-network-reachable monitoring port is the tailnet interface — an attacker on
+network-reachable monitoring port is the tailnet interface, an attacker on
 the public internet must not be able to read host metrics or kill the
 exporter.
 
@@ -65,15 +64,15 @@ exporter.
 Wazuh ≥ 4.8 removed `GET /alerts` from the manager API, so the forwarder
 **polls the Wazuh indexer (OpenSearch) directly**:
 
-1. `POST /wazuh-alerts-4.x-*/_search` (basic auth, indexer admin) —
-   `@timestamp > high-water-mark AND rule.id IN RULES`, ascending, ≤500 docs.
+1. `POST /wazuh-alerts-4.x-*/_search` (basic auth, indexer admin):
+`@timestamp > high-water-mark AND rule.id IN RULES`, ascending, ≤500 docs.
 2. Skips duplicates via an in-memory LRU of the last 500 processed event ids.
 3. Applies a per `(src_ip, rule.id)` cooldown (`COOLDOWN_SECONDS`).
-4. Formats the message (Telegram HTML, user values escaped) and sends it —
-   or logs `WOULD SEND: ...` when `DRY_RUN=true` / no token (test mode).
+4. Formats the message (Telegram HTML, user values escaped) and sends it,
+or logs `WOULD SEND: ...` when `DRY_RUN=true` / no token (test mode).
 5. Advances the high-water mark to the newest processed `@timestamp`
    (persisted atomically to `/state/hwm.json`). First run starts at
-   `now - 120s` — no backfill, so an old restart never floods Telegram.
+   `now - 120s`, no backfill, so an old restart never floods Telegram.
 
 Telegram 429 → sleep 60s, retry once, then drop. Any other error → log,
 sleep 15s, continue. SIGTERM → clean exit 0.
@@ -91,12 +90,12 @@ Forwarded rules (default):
 Edit `~/monitoring/.env` on asgard, then
 `docker compose up -d tg-forwarder` (re-reads env on recreate):
 
-- `RULES=100501,100504,501,502` — comma-separated rule ids. Find more ids in
+- `RULES=100501,100504,501,502`: comma-separated rule ids. Find more ids in
   the Wazuh dashboard (Rules) or in OpenSearch:
   `rule.id` in `wazuh-alerts-4.x-*`.
-- `COOLDOWN_SECONDS=60` — silence per (source ip, rule). Raise it if a
+- `COOLDOWN_SECONDS=60`: silence per (source ip, rule). Raise it if a
   particular attacker pair is spamming.
-- `POLL_INTERVAL=10` — seconds between polls.
+- `POLL_INTERVAL=10`: seconds between polls.
 
 ## Enabling Telegram (T5)
 

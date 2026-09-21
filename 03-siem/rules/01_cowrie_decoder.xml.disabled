@@ -1,5 +1,5 @@
 <!--
-  DISABLED — do NOT re-enable. Root cause of "0 cowrie alerts" (Phase 5, 2026-09-16).
+  DISABLED. Do NOT re-enable. Root cause of "0 cowrie alerts" (Phase 5, 2026-09-16).
 
   Why this decoder broke field extraction:
   In Wazuh 4.x, DecodeEvent (src/analysisd/decoders/decoder.c:144-207) runs a
