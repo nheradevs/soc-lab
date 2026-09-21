@@ -11,7 +11,7 @@ There is no real operating system inside to patch or to hand over to an attacker
 - Credential attempts per fake service (usernames and passwords)
 - Commands typed in the fake shells
 - Files uploaded or downloaded (exfiltration attempts)
-- Source IPs, timestamps, and full session transcripts (in `cowrie-data/`)
+- Source IPs, timestamps, and full session transcripts (in the `cowrie-data` docker volume)
 
 ## TODO
 

@@ -57,7 +57,7 @@ Hide in this screenshot: cloud project name, firewall rule source ranges, instan
 
 ### 02-honeypot
 
-Cowrie is a low-interaction honeypot: fake login shells for SSH and Telnet (plus other services when enabled) that record every credential, command, and file transfer attempt. There is no real operating system inside to patch or to hand over, so the data is the product. The `cowrie-data/` directory is the evidence source the rest of the pipeline reads.
+Cowrie is a low-interaction honeypot: fake login shells for SSH and Telnet (plus other services when enabled) that record every credential, command, and file transfer attempt. There is no real operating system inside to patch or to hand over, so the data is the product. The `cowrie-data` docker volume (JSON log at `log/cowrie/cowrie.json`) is the evidence source the rest of the pipeline reads.
 
 ![Cowrie honeypot configuration](screenshots/02-cowrie.png)
 Hide in this screenshot: the honeypot public IP in the cloud console and firewall rules.

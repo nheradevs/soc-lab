@@ -57,7 +57,7 @@ Ocultar en esta captura: nombre del proyecto en la nube, rangos de origen de las
 
 ### 02-honeypot
 
-Cowrie es un honeypot de baja interacción: shells de login falsos para SSH y Telnet (y otros servicios cuando se habilitan) que registran cada credencial, comando e intento de transferencia de archivos. No hay un sistema operativo real dentro que parchear o entregar, así que el dato es el producto. El directorio `cowrie-data/` es la fuente de evidencia que lee el resto del pipeline.
+Cowrie es un honeypot de baja interacción: shells de login falsos para SSH y Telnet (y otros servicios cuando se habilitan) que registran cada credencial, comando e intento de transferencia de archivos. No hay un sistema operativo real dentro que parchear o entregar, así que el dato es el producto. El volumen docker `cowrie-data` (log JSON en `log/cowrie/cowrie.json`) es la fuente de evidencia que lee el resto del pipeline.
 
 ![Configuración del honeypot Cowrie](screenshots/02-cowrie.png)
 Ocultar en esta captura: la IP pública del honeypot en la consola de la nube y en las reglas de firewall.

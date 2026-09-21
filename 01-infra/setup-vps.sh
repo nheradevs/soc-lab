@@ -76,28 +76,27 @@ echo "=== 6. Cowrie honeypot ==="
 mkdir -p /opt/honeypot/cowrie
 # Canonical compose file, also kept at 02-honeypot/docker-compose.yaml in this repo.
 cat > /opt/honeypot/cowrie/docker-compose.yaml <<'EOF'
-# Cowrie honeypot, low-interaction SSH/Telnet/HTTP/SMB/RDP/MySQL trap.
+# Cowrie honeypot: low-interaction SSH and Telnet trap.
 # Ports here are INTENTIONALLY exposed to the internet: that is the product.
+# The image serves SSH on 2222 and Telnet on 2223 internally, so the
+# mappings publish them on the standard ports 22 and 23.
 services:
   cowrie:
     image: cowrie/cowrie:latest
     container_name: cowrie
-    restart: unless-stopped
+    restart: always
     ports:
-      - "22:22"
-      - "23:23"
-      - "80:80"
-      - "445:445"
-      - "3389:3389"
-      - "3306:3306"
+      - "22:2222"
+      - "23:2223"
     volumes:
-      - ./cowrie-data:/var/log/cowrie
-# Keep only the services you want to advertise.
+      - cowrie-data:/cowrie/cowrie-git/var:z
+volumes:
+  cowrie-data:
 EOF
 cd /opt/honeypot/cowrie
 docker compose up -d
-echo "Fake services are live on 22/23/80/445/3389/3306."
-echo "Logs land in /opt/honeypot/cowrie/cowrie-data."
+echo "Fake SSH and Telnet are live on 22/23."
+echo "Logs land in the 'cowrie-data' docker volume at log/cowrie/cowrie.json."
 
 echo "=== 7. Manual next steps ==="
 cat <<EOF
@@ -106,9 +105,10 @@ cat <<EOF
    curl -sO https://packages.wazuh.com/4.14/wazuh-agent/latest/wazuh-agent.deb \\
      && dpkg -i ./wazuh-agent.deb \\
      && /var/ossec/bin/agent-authd -t $WAZUH_MANAGER_IP -p $WAZUH_AUTH_PASSWORD -A honeypot-vps
-3) Once the agent is active, add a localfile to the agent config pointing at the
-   mounted Cowrie log path (/opt/honeypot/cowrie/cowrie-data/*.log) and check the
-   built-in Wazuh Cowrie decoders; if the event format does not match, author a
+ 3) Once the agent is active, add a localfile to the agent config pointing at the
+    Cowrie JSON log in the 'cowrie-data' docker volume
+    (/var/lib/docker/volumes/cowrie-data/_data/log/cowrie/cowrie.json) and check the
+    built-in Wazuh Cowrie decoders; if the event format does not match, author a
    custom decoder + rule in 03-siem/rules (that becomes 04-detecciones material).
 4) Plant canarytokens (canarytokens.org, manual): a fake AWS credentials file and
    a fake credential doc reachable by the honeypot, alerts to email.
