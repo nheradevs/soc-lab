@@ -1,0 +1,27 @@
+<!--
+  DISABLED — do NOT re-enable. Root cause of "0 cowrie alerts" (Phase 5, 2026-09-16).
+
+  Why this decoder broke field extraction:
+  In Wazuh 4.x, DecodeEvent (src/analysisd/decoders/decoder.c:144-207) runs a
+  plugin ONLY for the node that matched. A child decoder that matches
+  SHADOWS its parent. `cowrie-json` (child of `json`) matched cowrie events
+  via its prematch, but it has no plugin and no regex, so the function hit
+  `else { return; }` WITHOUT invoking the parent `json` decoder's
+  JSON_Decoder plugin. Result: the JSON fields (eventid, src_ip, ...) were
+  never populated, so every rule using <field name="eventid"> had nothing to
+  match -> 0 alerts. Journald kept working (272 alerts) because its decoders
+  use their own regexes, not the JSON plugin.
+
+  Correct approach:
+  Rely on the BUILTIN `json` decoder (prematch ^{\s*"), whose JSON_Decoder
+  plugin populates each top-level key as a bare dynamic field (e.g. `eventid`,
+  per json_decoder.c fillData). The rules in 01_cowrie_rules.xml match on
+  <field name="eventid"> directly. No custom decoder is required.
+
+  Cowrie alerts are still identifiable by rule group "cowrie", rule ids
+  100501-100523, and the data.eventid field.
+-->
+<decoder name="cowrie-json">
+  <parent>json</parent>
+  <prematch>"eventid":"cowrie\.</prematch>
+</decoder>

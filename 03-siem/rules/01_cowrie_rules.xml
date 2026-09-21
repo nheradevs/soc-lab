@@ -1,0 +1,219 @@
+<!-- Cowrie 3.x honeypot rules -->
+<!-- Events are flat JSON (decoder: cowrie-json, parent: built-in "json"
+     plugin decoder). The JSON plugin stores each top-level key AS-IS, so
+     rules reference BARE keys: eventid, src_ip, username, password, ...
+     In ALERTS those fields appear under the "data" object (data.eventid),
+     but that prefix is a serialization container, NOT part of the field
+     key: a rule referencing "data.eventid" never matches.
+     Wazuh evaluates rules highest-level-first and the FIRST match wins, so
+     specific rules are more severe than the catch-all.
+     NOTE: the OSRegex engine does NOT support alternation inside
+     parentheses, hence one rule per exact event id. Field names must not
+     collide with static Eventinfo names (srcip, status, protocol, user,
+     data, ...): such a rule fails to load with "Field 'X' is static".
+     Event id catalogue: cowrie.core.eventids (running image 3.0.14). -->
+
+<group name="cowrie,">
+
+  <!-- ===================== Authentication ===================== -->
+
+  <!-- A "successful" login on a honeypot means 100% malicious:
+       no legitimate user ever logs into Cowrie. -->
+  <rule id="100501" level="10">
+    <field name="eventid">^cowrie\.login\.success$</field>
+    <description>Cowrie honeypot: fake login succeeded (attacker)</description>
+    <mitre>
+      <id>T1110</id>
+      <id>T1110.001</id>
+    </mitre>
+    <group>cowrie,honeypot,authentication_success,</group>
+  </rule>
+
+  <rule id="100502" level="7">
+    <field name="eventid">^cowrie\.login\.failed$</field>
+    <description>Cowrie honeypot: fake login failed (credential attempt)</description>
+    <mitre>
+      <id>T1110</id>
+      <id>T1110.001</id>
+    </mitre>
+    <group>cowrie,honeypot,authentication_fail,</group>
+  </rule>
+
+  <!-- ===================== Commands ===================== -->
+
+  <rule id="100503" level="9">
+    <field name="eventid">^cowrie\.command\.chpasswd$</field>
+    <description>Cowrie honeypot: chpasswd command attempted</description>
+    <mitre>
+      <id>T1098</id>
+    </mitre>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100504" level="7">
+    <field name="eventid">^cowrie\.command\.input$</field>
+    <description>Cowrie honeypot: command input in fake session</description>
+    <mitre>
+      <id>T1059</id>
+    </mitre>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100505" level="5">
+    <field name="eventid">^cowrie\.command\.success$</field>
+    <description>Cowrie honeypot: command output in fake session</description>
+    <mitre>
+      <id>T1059</id>
+    </mitre>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100506" level="4">
+    <field name="eventid">^cowrie\.command\.failed$</field>
+    <description>Cowrie honeypot: command failed in fake session</description>
+    <mitre>
+      <id>T1059</id>
+    </mitre>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <!-- ===================== Data transfer ===================== -->
+
+  <rule id="100507" level="8">
+    <field name="eventid">^cowrie\.session\.file_download$</field>
+    <description>Cowrie honeypot: file download in fake session</description>
+    <mitre>
+      <id>T1105</id>
+    </mitre>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100508" level="8">
+    <field name="eventid">^cowrie\.session\.file_upload$</field>
+    <description>Cowrie honeypot: file upload in fake session</description>
+    <mitre>
+      <id>T1105</id>
+    </mitre>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100509" level="4">
+    <field name="eventid">^cowrie\.session\.file_download\.failed$</field>
+    <description>Cowrie honeypot: file download failed</description>
+    <mitre>
+      <id>T1105</id>
+    </mitre>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <!-- ===================== Exploits ===================== -->
+
+  <rule id="100510" level="9">
+    <field name="eventid">^cowrie\.telnet\.exploit_success$</field>
+    <description>Cowrie honeypot: telnet exploit succeeded</description>
+    <mitre>
+      <id>T1210</id>
+    </mitre>
+    <group>cowrie,honeypot,exploit_attempt,</group>
+  </rule>
+
+  <rule id="100511" level="7">
+    <field name="eventid">^cowrie\.telnet\.exploit_attempt$</field>
+    <description>Cowrie honeypot: telnet exploit attempt</description>
+    <mitre>
+      <id>T1210</id>
+    </mitre>
+    <group>cowrie,honeypot,exploit_attempt,</group>
+  </rule>
+
+  <!-- ===================== Fingerprinting (context) ===================== -->
+
+  <rule id="100512" level="3">
+    <field name="eventid">^cowrie\.client\.version$</field>
+    <description>Cowrie honeypot: SSH client version banner</description>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100513" level="3">
+    <field name="eventid">^cowrie\.client\.kex$</field>
+    <description>Cowrie honeypot: SSH key exchange fingerprint (hassh)</description>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100514" level="3">
+    <field name="eventid">^cowrie\.client\.fingerprint$</field>
+    <description>Cowrie honeypot: client fingerprint</description>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100515" level="4">
+    <field name="eventid">^cowrie\.client\.malformed_packet$</field>
+    <description>Cowrie honeypot: malformed packet (fuzzing)</description>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100516" level="2">
+    <field name="eventid">^cowrie\.client\.size$</field>
+    <description>Cowrie honeypot: client size probe</description>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100517" level="2">
+    <field name="eventid">^cowrie\.client\.var$</field>
+    <description>Cowrie honeypot: client variable</description>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <!-- ===================== Session lifecycle (context) ===================== -->
+
+  <rule id="100518" level="3">
+    <field name="eventid">^cowrie\.session\.connect$</field>
+    <description>Cowrie honeypot: new connection</description>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100519" level="3">
+    <field name="eventid">^cowrie\.session\.closed$</field>
+    <description>Cowrie honeypot: connection closed</description>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100520" level="3">
+    <field name="eventid">^cowrie\.session\.input$</field>
+    <description>Cowrie honeypot: raw input in fake session</description>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <rule id="100521" level="3">
+    <field name="eventid">^cowrie\.session\.params$</field>
+    <description>Cowrie honeypot: connection parameters</description>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <!-- ===================== Catch-all ===================== -->
+
+  <!-- Any other Cowrie eventid (abuseipdb, greynoise, reversedns, proxy,
+       direct-tcpip tunneling, urlhaus, virustotal, telnet options, ...) -->
+  <rule id="100522" level="2">
+    <field name="eventid">^cowrie\..*$</field>
+    <description>Cowrie honeypot: activity</description>
+    <group>cowrie,honeypot,</group>
+  </rule>
+
+  <!-- ===================== Brute force ===================== -->
+
+  <!-- 5+ failed logins in 300s. NOTE: frequency keying for custom JSON
+       events may aggregate per agent rather than per source IP (JSON
+       decoders do not set the standard srcip field). On a honeypot
+       every login is hostile, so a global counter is still meaningful. -->
+  <rule id="100523" level="12" frequency="5" timeframe="300">
+    <if_matched_sid>100502</if_matched_sid>
+    <description>Cowrie honeypot: possible brute-force (5+ failed logins in 300s)</description>
+    <mitre>
+      <id>T1110</id>
+      <id>T1110.001</id>
+    </mitre>
+    <group>cowrie,honeypot,brute_force,</group>
+  </rule>
+
+</group>
