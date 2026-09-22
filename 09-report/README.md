@@ -88,5 +88,6 @@ Screenshots referenced across the portfolio live in [../screenshots/](../screens
 | [06-triage](../screenshots/06-triage.png) | Incident triage |
 | [07-telegram](../screenshots/07-telegram.png) | Alerting |
 | [08-hardening](../screenshots/08-hardening.png) | Post-incident hardening |
+| [09-report](../screenshots/09-report.png) | This report, rendered |
 
 This README's GitHub render is the closing shot (09) of the portfolio.
