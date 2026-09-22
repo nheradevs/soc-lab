@@ -53,49 +53,49 @@ Tailscale es la red privada entre equipo 2 y miel26. Todo el tráfico del agente
 Scripts de aprovisionamiento para ambos hosts del laboratorio. `setup-laptop.sh` convierte a equipo 2 en un servidor siempre encendido: sin sleep ni suspensión, 6 GB de swap, `vm.max_map_count` para OpenSearch, Docker, UFW con solo SSH y la tailnet abiertos, el stack Wazuh single-node y Tailscale. `setup-vps.sh` prepara a miel26: el SSH real se mueve al puerto 2222, el firewall cierra todo por defecto y abre al mundo solo los puertos del honeypot, y Cowrie queda corriendo como container de Docker.
 
 ![Servidor siempre encendido y VM en la nube tras el aprovisionamiento](screenshots/01-setup.png)
-Ocultar en esta captura: nombre del proyecto en la nube, rangos de origen de las reglas de firewall, IPs de las instancias.
+En esta captura oculté el nombre del proyecto en la nube, los rangos de origen de las reglas de firewall y las IPs de las instancias.
 
 ### 02-honeypot
 
 Cowrie es un honeypot de baja interacción: shells de login falsos para SSH y Telnet (y otros servicios cuando se habilitan) que registran cada credencial, comando e intento de transferencia de archivos. No hay un sistema operativo real dentro que parchear o entregar, así que el dato es el producto. El volumen docker `cowrie-data` (log JSON en `log/cowrie/cowrie.json`) es la fuente de evidencia que lee el resto del pipeline.
 
 ![Configuración del honeypot Cowrie](screenshots/02-cowrie.png)
-Ocultar en esta captura: la IP pública del honeypot en la consola de la nube y en las reglas de firewall.
+En esta captura oculté la IP pública del honeypot (aparece en la consola de la nube y en las reglas de firewall).
 
 ### 03-siem
 
 Ajustes de Wazuh: una política de ciclo de vida de índices que mantiene `wazuh-*` en fase hot 14 días y luego lo elimina, el registro del agente con el localfile que lee los logs de Cowrie, y los decodificadores y reglas personalizados en `rules/`. La primera versión de las reglas nunca disparó alertas: un decodificador personalizado declarado como hijo del decodificador `json` integrado lo eclipsaba, y los campos nunca se poblaban. La lección es confirmar que el campo aparece en el payload de la alerta antes de culpar a la regla.
 
 ![Dashboard de Wazuh con las reglas de Cowrie cargadas](screenshots/03-wazuh.png)
-Ocultar en esta captura: credenciales del dashboard, IPs Tailscale de los agentes, direcciones de la LAN de la casa.
+En esta captura oculté las credenciales del dashboard, las IPs Tailscale de los agentes y las direcciones de la LAN de casa.
 
 ### 04-detecciones
 
 Decodificadores y reglas personalizados de Wazuh, uno por cada ataque observado. Cada regla se mapea a los IDs de técnica de MITRE ATT&CK del comportamiento que detecta, de modo que el flujo de alertas llega ya anotado con la intención del atacante.
 
 ![Lista de alertas filtrada a las reglas de detección personalizadas](screenshots/04-alerts.png)
-Ocultar en esta captura: direcciones Tailscale y de la LAN de la casa dentro de los payloads. Las IPs de origen de los atacantes pueden seguir.
+Oculté las direcciones Tailscale y de la LAN de casa dentro de los payloads. Las IPs de origen de los atacantes quedan visibles.
 
 ### 05-visualizacion
 
 Dos partes: las exportaciones JSON de dashboards con sus capturas, y el stack `monitoring/`. El stack combina Prometheus + Grafana para la salud de la infraestructura (disco/RAM/carga de asgard, estado y conntrack de miel26) con un forwarder Python que consulta OpenSearch por las reglas de alto valor de Wazuh y envía mensajes a Telegram. Todos los puertos quedan ligados a loopback, y Grafana se alcanza por un túnel SSH.
 
 ![Dashboard de Grafana para la salud de la infraestructura del laboratorio](screenshots/05-grafana.png)
-Ocultar en esta captura: direcciones Tailscale en las métricas y etiquetas de paneles, direcciones de la LAN de la casa.
+Oculté las direcciones Tailscale en las métricas y etiquetas de paneles, y las direcciones de la LAN de casa.
 
 ### 06-observaciones
 
 Línea de tiempo de ataques: fechas, IPs de origen, TTPs y consultas de evidencia reproducibles para cada ataque observado. La primera entrada documenta una campaña de droppers SSH automatizados que también hacía spoofing de la IP del bridge de Docker del honeypot (paquetes martian), y el apagón de telemetría de 13,5 horas que el pico de tráfico causó hasta el reinicio manual.
 
 ![Registro de observación con la línea de tiempo del ataque](screenshots/06-triage.png)
-Ocultar en esta captura: la IP pública del operador y las direcciones Tailscale. Las IPs de origen de los atacantes pueden seguir.
+Oculté mi IP pública y las direcciones Tailscale. Las IPs de origen de los atacantes quedan visibles.
 
 ### 07-respuesta
 
 Runbooks de triaje y respuesta para los ataques observados. Los eventos de alto valor (logins falsos de Cowrie, comandos tecleados, conexión y desconexión del agente) llegan por Telegram desde el forwarder, y cada ataque termina con una decisión escrita: bloquear, observar o aceptar el riesgo.
 
 ![Alerta de Telegram enviada por el forwarder](screenshots/07-telegram.png)
-Ocultar en esta captura: el token del bot, el chat ID y el nombre de usuario del operador.
+Oculté el token del bot, el chat ID y mi nombre de usuario.
 
 ### 08-endurecimiento
 
@@ -109,7 +109,7 @@ Ocultar en esta captura: el nombre del proyecto en la nube, los rangos de origen
 El informe final que ensambla las fases 01-08 en una sola pieza de portafolio: qué se construyó, qué se capturó, qué se aprendió y cómo sigue el bucle.
 
 ![Estado final del laboratorio](screenshots/09-state.png)
-Ocultar en esta captura: todo lo de la lista anterior, porque el informe reutiliza capturas del laboratorio.
+Oculté todo lo de la lista anterior, porque el informe reutiliza capturas del laboratorio.
 
 ## Lo que el honeypot capturó
 

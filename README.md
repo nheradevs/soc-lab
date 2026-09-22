@@ -53,49 +53,49 @@ Tailscale is the private network between equipo 2 and miel26. All agent traffic 
 Bootstrap scripts for both lab hosts. `setup-laptop.sh` turns equipo 2 into an always-on server: no sleep or suspend, 6 GB of swap, `vm.max_map_count` for OpenSearch, Docker, a UFW profile that opens only SSH and the tailnet, the Wazuh single-node stack, and Tailscale. `setup-vps.sh` prepares miel26: real SSH moves to port 2222, the firewall defaults to deny and opens only the honeypot ports to the world, and Cowrie comes up as a Docker container.
 
 ![Always-on server and cloud VM after bootstrap](screenshots/01-setup.png)
-Hide in this screenshot: cloud project name, firewall rule source ranges, instance IPs.
+I hid the cloud project name, the firewall rule source ranges, and the instance IPs in this screenshot.
 
 ### 02-honeypot
 
 Cowrie is a low-interaction honeypot: fake login shells for SSH and Telnet (plus other services when enabled) that record every credential, command, and file transfer attempt. There is no real operating system inside to patch or to hand over, so the data is the product. The `cowrie-data` docker volume (JSON log at `log/cowrie/cowrie.json`) is the evidence source the rest of the pipeline reads.
 
 ![Cowrie honeypot configuration](screenshots/02-cowrie.png)
-Hide in this screenshot: the honeypot public IP in the cloud console and firewall rules.
+I hid the honeypot public IP (it appears in the cloud console and in the firewall rules).
 
 ### 03-siem
 
 Wazuh tuning: an index lifecycle policy that keeps `wazuh-*` hot for 14 days and then deletes it, the agent enrollment with the localfile that tails the Cowrie logs, and the custom decoders and rules in `rules/`. The first version of the rules never fired: a custom decoder declared as a child of the built-in `json` decoder shadowed it, so the fields were never populated. The lesson is to confirm the field appears in the alert payload before blaming the rule.
 
 ![Wazuh dashboard with the Cowrie rules loaded](screenshots/03-wazuh.png)
-Hide in this screenshot: dashboard credentials, agent Tailscale IPs, home LAN addresses.
+I hid the dashboard credentials, the agents' Tailscale IPs, and the home LAN addresses.
 
 ### 04-detecciones
 
 Custom Wazuh decoders and rules, one per observed attack. Each rule maps to the MITRE ATT&CK technique IDs for the behavior it detects, so the alert stream arrives already annotated with attacker intent.
 
 ![Alert list filtered to the custom detection rules](screenshots/04-alerts.png)
-Hide in this screenshot: Tailscale and home LAN addresses in alert payloads. Attacker source IPs may stay.
+I hid the Tailscale and home LAN addresses inside the alert payloads. Attacker source IPs stay visible.
 
 ### 05-visualizacion
 
 Two parts: the dashboard JSON exports and screenshots, and the `monitoring/` stack. The stack pairs Prometheus + Grafana for infrastructure health (asgard disk/RAM/load, miel26 up-state and conntrack) with a Python forwarder that polls OpenSearch for the high-value Wazuh rules and messages Telegram. Every port binds to loopback, and Grafana is reached through an SSH tunnel.
 
 ![Grafana dashboard for lab infrastructure health](screenshots/05-grafana.png)
-Hide in this screenshot: Tailscale addresses in metrics and panel labels, home LAN addresses.
+I hid the Tailscale addresses in metrics and panel labels, plus the home LAN addresses.
 
 ### 06-observaciones
 
 The attack timeline: dates, source IPs, TTPs, and reproducible evidence queries for every observed attack. The first entry documents a scripted SSH dropper campaign that also spoofed the honeypot's Docker bridge IP (martian packets), and the 13.5-hour telemetry blackout the traffic surge caused before a manual reboot.
 
 ![Observation record with the attack timeline](screenshots/06-triage.png)
-Hide in this screenshot: the operator home IP and Tailscale addresses. Attacker source IPs may stay.
+I hid my home IP and the Tailscale addresses. Attacker source IPs stay visible.
 
 ### 07-respuesta
 
 Triage and response runbooks for the observed attacks. The high-value events (Cowrie fake logins, command input, agent connect and disconnect) arrive on Telegram from the forwarder, and each attack ends with a written decision: block, watch, or accept the risk.
 
 ![Telegram alert from the forwarder](screenshots/07-telegram.png)
-Hide in this screenshot: the bot token, the chat ID, and the operator's username.
+I hid the bot token, the chat ID, and my username.
 
 ### 08-endurecimiento
 
@@ -109,7 +109,7 @@ Hide in this screenshot: the cloud project name, firewall rule source ranges, in
 The final write-up that assembles phases 01-08 into a single portfolio piece: what was built, what was captured, what was learned, and how the loop keeps running.
 
 ![Final state of the lab](screenshots/09-state.png)
-Hide in this screenshot: everything in the checklist below, since the report reuses lab screenshots.
+I hid everything in the checklist below, since the report reuses lab screenshots.
 
 ## What the honeypot caught
 
