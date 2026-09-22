@@ -2,10 +2,10 @@
 
 Wazuh tuning lives here:
 
-- **ILM policy**: hot for 14 days, then delete. A home SSD must not fill up. Configure it in the Wazuh indexer ISM (Index Lifecycle Management).
-- **Agent configuration**: enrollment plus the localfile pointing at the Cowrie logs.
-- **Custom decoders/rules**: drop them in `rules/`.
-- **Dashboard exports**: shared with 05-visualizacion.
+- **ILM policy**, hot for 14 days, then delete. A home SSD must not fill up. Configure it in the Wazuh indexer ISM (Index Lifecycle Management).
+- **Agent configuration**, enrollment plus the localfile pointing at the Cowrie logs.
+- **Custom decoders/rules**, drop them in `rules/`.
+- **Dashboard exports**, shared with 05-visualizacion.
 
 ## ILM intent (pseudocode)
 

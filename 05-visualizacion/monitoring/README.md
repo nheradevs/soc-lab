@@ -6,7 +6,7 @@ Infrastructure-health monitoring for the SOC lab. Covers:
   would silently stop alert indexing, so this is the biggest blind spot.
 - **miel26** (GCP honeypot, e2-small): up/down, RAM, conntrack, self-DoS
   watch under heavy attack.
-- **Wazuh → Telegram forwarder**: the high-value events only (Cowrie fake
+- **Wazuh → Telegram forwarder**, the high-value events only (Cowrie fake
   logins, command input, agent events), NOT the ~10k alerts/day flood.
 
 This is infra monitoring, not security visualization. The Wazuh dashboard already covers security.
