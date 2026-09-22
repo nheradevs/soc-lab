@@ -102,7 +102,7 @@ I hid the bot token, the chat ID, and my username.
 Hardening applied after each observation, with the rationale written down. The first post-incident pass (2026-09-17) deliberately did not block attacker IPs at the firewall (blocking would cut off the feed, and the IPs are rotating botnet nodes), enabled the Wazuh agent at boot, removed port 2222 from the wide-open decoy firewall rule, and upgraded miel26 from e2-micro to e2-small so a traffic spike cannot silence telemetry again.
 
 ![VPC firewall rules after the hardening pass](screenshots/08-hardening.png)
-Hide in this screenshot: the cloud project name, firewall rule source ranges, instance IPs.
+I hid the cloud project name, the firewall rule source ranges, and the instance IPs in this screenshot.
 
 ### 09-report
 

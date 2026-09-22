@@ -102,7 +102,7 @@ Oculté el token del bot, el chat ID y mi nombre de usuario.
 Endurecimiento aplicado después de cada observación, con el razonamiento documentado. La primera pasada post-incidente (2026-09-17) decidió deliberadamente no bloquear las IPs de los atacantes en el firewall (bloquearlas interrumpiría la observación, y son nodos rotativos de botnet), habilitó el agente Wazuh en el arranque, quitó el puerto 2222 de la regla de firewall del señuelo que estaba abierta a todos, y actualizó miel26 de e2-micro a e2-small para que un pico de tráfico no vuelva a silenciar la telemetría.
 
 ![Reglas del firewall VPC tras la pasada de endurecimiento](screenshots/08-hardening.png)
-Ocultar en esta captura: el nombre del proyecto en la nube, los rangos de origen de las reglas de firewall, las IPs de las instancias.
+En esta captura oculté el nombre del proyecto en la nube, los rangos de origen de las reglas de firewall y las IPs de las instancias.
 
 ### 09-report
 
