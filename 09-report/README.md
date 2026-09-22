@@ -50,7 +50,7 @@ The incident is the lab's best artifact: it shows detection working (the campaig
 
 Post-incident actions, documented with verification evidence in [08-endurecimiento](../08-endurecimiento/):
 
-- **Deliberate non-action:** attacker IPs were *not* blocked in the VPC firewall — they are rotating botnet nodes, the honeypot's value is observing them, and containment already comes from the Cowrie sandbox.
+- **Deliberate non-action.** Attacker IPs were *not* blocked in the VPC firewall — they are rotating botnet nodes, the honeypot's value is observing them, and containment already comes from the Cowrie sandbox.
 - **`wazuh-agent` enabled** via `systemctl` (it was installed but never enabled — the fix that closes the self-DoS recovery gap).
 - **VM resized** e2-micro → e2-small (2 GB) to absorb scan spikes.
 - **Real SSH (port 2222) restricted** to the operator's home IP in the GCP firewall; it had been leaking to `0.0.0.0/0` through the honeypot decoy rule. Only the fake services remain internet-facing.

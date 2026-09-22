@@ -65,7 +65,7 @@ Both IPs also spoofed the honeypot's Docker bridge IP (`172.17.0.2`) as source.
 - The spoofing **stopped exactly at the reboot**; zero occurrences since
   (checked 09-17 02:26 UTC).
 
-**Hypothesis (corrected):** an earlier working theory blamed the spoofing flood
+**Hypothesis (corrected).** An earlier working theory blamed the spoofing flood
 for the telemetry loss. The timeline does not support that: the agent's last
 alert (07:33:59) predates the first surviving martian log (08:21:54). The
 better-supported reading is that the **05:00-07:33 traffic surge** (~15k alerts,
