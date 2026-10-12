@@ -1,4 +1,4 @@
-# Instrucciones y Política de Seguridad del Agente — SOC Lab
+# Instrucciones y Política de Seguridad del Agente - SOC Lab
 
 > Política persistente para agentes de IA (opencode) que operan este repositorio.
 > Estructura basada en el curso "Claude Code Seguro" (Álvaro Chirou): este archivo guía
@@ -58,7 +58,7 @@ siempre seguridad.
 
 - Imágenes oficiales con tag fijo: `wazuh/wazuh-*:4.14.7`, `prom/prometheus`,
   `grafana/grafana`, `prom/node-exporter`.
-- Honeypot: `cowrie/cowrie` — riesgo conocido: hoy usa `:latest`; fijar un tag estable
+- Honeypot: `cowrie/cowrie` - riesgo conocido: hoy usa `:latest`; fijar un tag estable
   al reanudar mantenimiento del honeypot.
 - Forwarder: Python 3 + `requests` únicamente.
 - Escaneo: `grep` y `gitleaks` (si está disponible). Ninguna herramienta nueva de
@@ -110,7 +110,7 @@ Reportar el resultado real de cada comando aplicable al cerrar la tarea.
 
 Este archivo guía pero no bloquea. El enforcement por configuración vive en:
 
-- **B**: bloque `permission` en `opencode.json` — patrones bash allow/ask/deny
+- **B**: bloque `permission` en `opencode.json` - patrones bash allow/ask/deny
   (precedencia deny > ask > allow), lectura de `.env` denegada, `external_directory`
   en `ask`, herramientas MCP acotadas por servidor/herramienta.
 - **C**: plugin global con tres hooks defensivos sobre `tool.execute.before`
