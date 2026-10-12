@@ -111,6 +111,10 @@ The final write-up that assembles phases 01-08 into a single portfolio piece: wh
 ![Final state of the lab](screenshots/09-state.png)
 I hid everything in the checklist below, since the report reuses lab screenshots.
 
+### 10-gobernanza-agentes
+
+The AI agent operating the lab is itself a system in the threat model. This phase documents its controls: a 7-part persistent security policy (`AGENTS.md`), least-privilege permission rules (bash deny/ask patterns, `.env` blocked for read AND write, self-governance files gated so the agent cannot silently weaken its own cage), a defensive hooks plugin (bash-firewall, secrets-scanner, env-protector) that also covers what permission patterns cannot see (the content of commands and writes), a custom `/security-review` command that found 2 HIGH and 3 MEDIUM real issues which were then fixed and re-verified with before/after evidence, a STRIDE pass over the whole pipeline including the agent context window itself, and an MCP/subagent surface audit with per-agent scoping. Sanitized templates live in `10-gobernanza-agentes/`.
+
 ## What the honeypot caught
 
 Numbers verified on 2026-09-21 against OpenSearch on asgard:

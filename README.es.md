@@ -111,6 +111,10 @@ El informe final que ensambla las fases 01-08 en una sola pieza de portafolio: q
 ![Estado final del laboratorio](screenshots/09-state.png)
 Oculté todo lo de la lista anterior, porque el informe reutiliza capturas del laboratorio.
 
+### 10-gobernanza-agentes
+
+El agente de IA que opera el laboratorio es en sí mismo un sistema dentro del modelo de amenazas. Esta fase documenta sus controles: una política de seguridad persistente de 7 partes (`AGENTS.md`), reglas de permisos de mínimo privilegio (patrones bash deny/ask, `.env` bloqueado para lectura Y escritura, archivos de autogobierno protegidos para que el agente no pueda aflojar su propia jaula en silencio), un plugin de hooks defensivos (bash-firewall, secrets-scanner, env-protector) que cubre lo que los patrones de permisos no ven (el contenido de comandos y escrituras), un comando `/security-review` propio que encontró 2 HIGH y 3 MEDIUM reales, después corregidos y reverificados con evidencia antes/después, un pase STRIDE sobre todo el pipeline incluida la ventana de contexto del agente, y una auditoría de superficie MCP/subagentes con scoping por agente. Las plantillas saneadas viven en `10-gobernanza-agentes/`.
+
 ## Lo que el honeypot capturó
 
 Cifras verificadas el 2026-09-21 contra OpenSearch en asgard:
