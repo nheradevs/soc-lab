@@ -1,4 +1,4 @@
-// security-hooks.ts — Deterministic defensive guards for OpenCode.
+// security-hooks.ts - Deterministic defensive guards for OpenCode.
 //
 // Port of the three PreToolUse hooks from the course
 // "Claude Code Seguro" (Alvaro Chirou), module 7:
