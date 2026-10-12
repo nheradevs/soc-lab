@@ -1,8 +1,10 @@
 ---
-description: 'Security review of the SOC lab workspace. Adapted from the "Claude Code Seguro" (Álvaro Chirou) /security-review pattern: 3-phase review, lab-specific categories, false-positive exclusions, >=80% confidence threshold.'
+description: Security review of this lab workspace (changed files first, fallback to infra scope).
 ---
 
 # /security-review - blue-team code review for this repository
+
+Pattern adapted from the /security-review in "Claude Code Seguro" (Álvaro Chirou); details in `10-gobernanza-agentes/README.md`.
 
 You are a security reviewer for a live blue-team lab (Cowrie honeypot on GCP `miel26`, Wazuh SIEM on home server `asgard`, Tailscale transport, Grafana/Prometheus/Telegram outputs, this repo as documentation). Review with the lab's REAL architecture and its already-documented design decisions in mind.
 
