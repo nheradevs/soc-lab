@@ -67,14 +67,29 @@ ufw allow OpenSSH
 ufw allow in on tailscale0 || true
 ufw --force enable
 
-echo "=== 8. Tailscale (install only; 'up' is interactive) ==="
+echo "=== 8. Tailscale via apt repo (no blind curl|sh as root - AGENTS.md §2.5) ==="
 if ! command -v tailscale >/dev/null 2>&1; then
-  curl -fsSL https://tailscale.com/install.sh | sh
+  CODENAME=$(. /etc/os-release; printf '%s' "${VERSION_CODENAME:?unsupported release}")
+  curl -fsSL "https://pkgs.tailscale.com/stable/ubuntu/${CODENAME}.noarmor.gpg" -o /tmp/tailscale.gpg
+  echo "Signing key fingerprints (compare against https://tailscale.com/kb/1312/keys):"
+  gpg --show-keys --with-colons /tmp/tailscale.gpg | awk -F: '/^fpr:/{print "  " $10}'
+  read -r -p "Fingerprints match the published Tailscale signing key? [y/N] " REPLY
+  if [ "$REPLY" != "y" ]; then
+    echo "ABORT: unverified signing key." >&2
+    rm -f /tmp/tailscale.gpg
+    exit 1
+  fi
+  install -m 0644 /tmp/tailscale.gpg /usr/share/keyrings/tailscale-archive-keyring.gpg
+  curl -fsSL "https://pkgs.tailscale.com/stable/ubuntu/${CODENAME}.tailscale-keyring.list" -o /etc/apt/sources.list.d/tailscale.list
+  apt-get update
+  apt-get install -y tailscale
+  rm -f /tmp/tailscale.gpg
 fi
 echo "NEXT (manual): run 'tailscale up' on this machine."
 
 echo "=== 9. Wazuh single-node: indexer + manager + dashboard ==="
-git clone https://github.com/wazuh/wazuh-docker /opt/wazuh-docker
+# Pinned to the stack version (AGENTS.md §4): never a floating HEAD clone.
+git clone --branch v4.14.7 --depth 1 https://github.com/wazuh/wazuh-docker /opt/wazuh-docker
 cd /opt/wazuh-docker/wazuh-docker
 docker compose -f single-node.yaml --env-file .env.local up -d
 
@@ -96,36 +111,38 @@ if ! printf '%s' "$HEALTH" | grep -Eq '"status":"(green|yellow)"'; then
   echo "Inspect with: docker compose -f single-node.yaml logs indexer"
 fi
 
-echo "=== 10. Observability ==="
+echo "=== 10. Observability: canonical loopback-only stack ==="
 if [ "$PROFILE" = "full" ]; then
-  mkdir -p /opt/soc-lab/observability
-  cat > /opt/soc-lab/observability/docker-compose.yaml <<'EOF'
-# Home-ops trio: node metrics, Prometheus, Grafana.
-services:
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    restart: unless-stopped
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./grafana-data:/var/lib/grafana
-    depends_on:
-      - prometheus
-    restart: unless-stopped
-  node-exporter:
-    image: prom/node-exporter:latest
-    ports:
-      - "9100:9100"
-    restart: unless-stopped
-EOF
-  cd /opt/soc-lab/observability
+  # Single source of truth: copy the hardened stack versioned in this repo.
+  # The old inline compose bound 3000/9090/9100 to 0.0.0.0 (Docker's iptables
+  # bypass UFW) and left Grafana on its default admin credential. Never rebuild
+  # a second variant inline.
+  SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+  MONITORING_SRC="$SCRIPT_DIR/../05-visualizacion/monitoring"
+  if [ ! -d "$MONITORING_SRC" ]; then
+    echo "ERROR: $MONITORING_SRC not found; run this script from a repo checkout." >&2
+    exit 1
+  fi
+  mkdir -p /opt/soc-lab
+  cp -a "$MONITORING_SRC" /opt/soc-lab/monitoring
+  cd /opt/soc-lab/monitoring
+  # Secrets are generated straight into the 0600 file, never echoed (AGENTS.md §2.1).
+  if [ ! -f .env ]; then
+    umask 077
+    {
+      printf 'GRAFANA_ADMIN_PASSWORD=%s\n' "$(openssl rand -hex 16)"
+      printf 'TELEGRAM_BOT_TOKEN=<PASTE-from-BotFather>\n'
+      printf 'TELEGRAM_CHAT_ID=<PASTE>\n'
+      printf 'DRY_RUN=true\n'
+    } > .env
+    echo "Created /opt/soc-lab/monitoring/.env (mode 0600) with a generated Grafana admin password."
+    echo "Paste the Telegram values there, then flip DRY_RUN=false to enable real sends."
+  fi
   docker compose up -d
-  echo "Grafana is up at http://<host IP>:3000."
-  echo "Add an OpenSearch datasource in Grafana: http://<host IP>:9200 with index pattern 'wazuh-*'."
+  echo "All monitoring ports bind 127.0.0.1 only. Access Grafana via tunnel:"
+  echo "  ssh -N -L 3000:localhost:3000 <this-host>"
+  echo "Grafana admin password: in /opt/soc-lab/monitoring/.env (not printed anywhere)."
+  echo "OpenSearch datasource: https://localhost:9200 (self-signed: pin the indexer CA), pattern 'wazuh-*'."
 else
   echo "Profile 'slim': Grafana/Prometheus skipped to protect RAM."
   echo "The Wazuh dashboard is the console for now."
