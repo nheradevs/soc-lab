@@ -41,6 +41,7 @@ import ssl
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
@@ -57,6 +58,24 @@ RULES = [r.strip() for r in os.environ.get("RULES", "100501,100504,501,502").spl
 COOLDOWN_SECONDS = int(os.environ.get("COOLDOWN_SECONDS", "60"))
 POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL", "10"))
 
+# --- internal endpoints policy (2026-10-12 security review, HIGH-1) -----------
+# The indexer/API must live on loopback or the Tailscale CGNAT range (100.64/10).
+# Anything else is refused at startup: this program must never be pointed at a
+# remote host with the relaxed internal TLS context.
+_INTERNAL_HOSTS = ("localhost", "127.0.0.1", "::1")
+
+
+def _is_internal_host(url):
+    host = urllib.parse.urlsplit(url).hostname or ""
+    return host in _INTERNAL_HOSTS or host.startswith("100.")
+
+
+if not _is_internal_host(OPENSEARCH_URL):
+    raise SystemExit(
+        "OPENSEARCH_URL must point at loopback or a tailnet address, got: "
+        + repr(urllib.parse.urlsplit(OPENSEARCH_URL).hostname)
+    )
+
 ALERT_INDEX = "wazuh-alerts-4.x-*"
 PAGE_SIZE = 500
 STATE_FILE = "/state/hwm.json"
@@ -66,9 +85,21 @@ ERROR_RETRY_SECONDS = 15
 
 log = logging.getLogger("tg-forwarder")
 
-_SSL_CTX = ssl.create_default_context()
-_SSL_CTX.check_hostname = False  # self-signed indexer certs
-_SSL_CTX.verify_mode = ssl.CERT_NONE
+# Two TLS stances, selected per destination (security review HIGH-1): internet
+# endpoints (api.telegram.org) ALWAYS get full certificate + hostname
+# verification; only loopback/tailnet hosts may use the relaxed self-signed
+# context, and setting INDEXER_CA_FILE upgrades even those to pinned-CA checks.
+if os.environ.get("INDEXER_CA_FILE"):
+    _INTERNAL_CTX = ssl.create_default_context(cafile=os.environ["INDEXER_CA_FILE"])
+else:
+    _INTERNAL_CTX = ssl.create_default_context()
+    _INTERNAL_CTX.check_hostname = False  # self-signed indexer certs, internal legs only
+    _INTERNAL_CTX.verify_mode = ssl.CERT_NONE
+_PUBLIC_CTX = ssl.create_default_context()
+
+
+def _ssl_ctx_for(url):
+    return _INTERNAL_CTX if _is_internal_host(url) else _PUBLIC_CTX
 
 _STOP = False
 _seen = OrderedDict()      # LRU set of processed event ids
@@ -132,7 +163,7 @@ def http_request(url, data=None, headers=None, timeout=30):
     """urllib request; returns (status, body_bytes). Raises on network errors."""
     req = urllib.request.Request(url, data=data, headers=headers or {})
     try:
-        with urllib.request.urlopen(req, context=_SSL_CTX, timeout=timeout) as resp:
+        with urllib.request.urlopen(req, context=_ssl_ctx_for(url), timeout=timeout) as resp:
             return resp.status, resp.read()
     except urllib.error.HTTPError as e:
         return e.code, e.read()
@@ -208,6 +239,20 @@ def es_search(hwm_iso):
 
 # --- message building ------------------------------------------------------------
 
+
+def mask_secret(value):
+    """Mask a captured password for transport: keep only first/last char.
+
+    The credential pair is detection data and usernames stay visible (repo
+    policy), but plaintext victim passwords must not rest in Telegram history
+    (AGENTS.md §5: 'credenciales de victimas: enmascaradas SIEMPRE').
+    """
+    text = str(value or "")
+    if len(text) <= 2:
+        return "*" * 5
+    return text[0] + "*" * min(len(text) - 2, 12) + text[-1]
+
+
 def build_message(src):
     """Build the Telegram HTML message for an alert; None if rule not formatted."""
     rule = src.get("rule") or {}
@@ -220,7 +265,7 @@ def build_message(src):
         return (
             f"\U0001F3A3 Cowrie fake login (L{esc(rule.get('level', '?'))})\n"
             f"\U0001F310 {esc(data.get('src_ip', '?'))}\n"
-            f"\U0001F464 {esc(data.get('username', '?'))} / {esc(data.get('password', ''))}\n"
+            f"\U0001F464 {esc(data.get('username', '?'))} / {mask_secret(data.get('password'))}\n"
             f"\U0001F4E1 {esc(data.get('protocol', '?'))} \u2192 port {esc(data.get('dst_port', '?'))}\n"
             f"\U0001F550 {ts} UTC"
         )
