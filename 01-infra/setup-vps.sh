@@ -39,18 +39,19 @@ sshd -t
 echo "WARNING: SSH moves to port 2222 on the next line. Reconnect with 'ssh -p 2222 user@host' before closing this session. The restart will drop this one."
 systemctl restart ssh
 
-echo "=== 3. ufw: default deny, honeypot ports open to the world ==="
+echo "=== 3. ufw: default deny, bait ports 22/23 open to the world ==="
+# Decoys 80/445/3389/3306 REMOVED (2026-10-12 security review, MED-1): nothing
+# served them (Cowrie maps 22/23 only), they were a trap for whoever later
+# enables Cowrie's HTTP/SMB/RDP modules, and they added scan noise for zero
+# analytic value on a small VM. Decision: clean SSH/Telnet bait only.
+# Keep the GCP VPC firewall IN SYNC (strip the same decoys from the open rule).
 ufw default deny incoming
 ufw default allow outgoing
 # ufw is first-match-wins: the self-deny must be added before the per-port allows.
-ufw deny from "$HOME_IP" to any port 22,23,80,445,3389,3306
+ufw deny from "$HOME_IP" to any port 22,23
 # Fake honeypot services: these SHOULD be reachable by the world.
 ufw allow 22/tcp
 ufw allow 23/tcp
-ufw allow 80/tcp
-ufw allow 445/tcp
-ufw allow 3389/tcp
-ufw allow 3306/tcp
 # Management SSH: restrict to the operator IP only (defense in depth; also
 # restrict it in the GCP VPC firewall). If your public IP is dynamic, keep 2222
 # reachable via Tailscale instead of widening this, or you will lock yourself out.
@@ -68,7 +69,22 @@ echo "=== 5. Docker + Tailscale (install only; 'up' is interactive) ==="
 apt-get update
 apt-get install -y docker.io docker-compose-v2 git
 if ! command -v tailscale >/dev/null 2>&1; then
-  curl -fsSL https://tailscale.com/install.sh | sh
+  # apt repo + verified signing key; no blind curl|sh as root (AGENTS.md §2.5).
+  CODENAME=$(. /etc/os-release; printf '%s' "${VERSION_CODENAME:?unsupported release}")
+  curl -fsSL "https://pkgs.tailscale.com/stable/ubuntu/${CODENAME}.noarmor.gpg" -o /tmp/tailscale.gpg
+  echo "Signing key fingerprints (compare against https://tailscale.com/kb/1312/keys):"
+  gpg --show-keys --with-colons /tmp/tailscale.gpg | awk -F: '/^fpr:/{print "  " $10}'
+  read -r -p "Fingerprints match the published Tailscale signing key? [y/N] " REPLY
+  if [ "$REPLY" != "y" ]; then
+    echo "ABORT: unverified signing key." >&2
+    rm -f /tmp/tailscale.gpg
+    exit 1
+  fi
+  install -m 0644 /tmp/tailscale.gpg /usr/share/keyrings/tailscale-archive-keyring.gpg
+  curl -fsSL "https://pkgs.tailscale.com/stable/ubuntu/${CODENAME}.tailscale-keyring.list" -o /etc/apt/sources.list.d/tailscale.list
+  apt-get update
+  apt-get install -y tailscale
+  rm -f /tmp/tailscale.gpg
 fi
 echo "NEXT (manual): run 'tailscale up' on this VPS, same tailnet as the always-on server."
 
@@ -99,17 +115,29 @@ echo "Fake SSH and Telnet are live on 22/23."
 echo "Logs land in the 'cowrie-data' docker volume at log/cowrie/cowrie.json."
 
 echo "=== 7. Manual next steps ==="
-cat <<EOF
+# QUOTED heredoc: nothing expands here, so no secret ever reaches stdout
+# (2026-10-12 security review, MED-3: the old version printed the live
+# enrollment password via $WAZUH_AUTH_PASSWORD and named a binary that
+# does not exist).
+cat <<'EOF'
 1) Run 'tailscale up' on this VPS and on the always-on server (same tailnet).
-2) Install the Wazuh agent (adjust 4.14 to the Wazuh version in use):
-   curl -sO https://packages.wazuh.com/4.14/wazuh-agent/latest/wazuh-agent.deb \\
-     && dpkg -i ./wazuh-agent.deb \\
-     && /var/ossec/bin/agent-authd -t $WAZUH_MANAGER_IP -p $WAZUH_AUTH_PASSWORD -A honeypot-vps
- 3) Once the agent is active, add a localfile to the agent config pointing at the
-    Cowrie JSON log in the 'cowrie-data' docker volume
-    (/var/lib/docker/volumes/cowrie-data/_data/log/cowrie/cowrie.json) and check the
-    built-in Wazuh Cowrie decoders; if the event format does not match, author a
+2) Install the Wazuh agent, PINNED to the manager version (4.14.7 in this lab):
+     # browse the listing, take the exact wazuh-agent_4.14.7-1_amd64.deb next
+     # to the /latest/ alias, and verify its digest against the published one:
+     curl -sO https://packages.wazuh.com/4.14/wazuh-agent/latest/wazuh-agent.deb
+     sha256sum wazuh-agent.deb        # compare before installing, never after
+     dpkg -i ./wazuh-agent.deb
+   Enroll (the binary is agent_auth, NOT agent-authd). Type the values locally
+   in this shell or replace the placeholders by hand; never store them in the
+   repo or echo them:
+     /var/ossec/bin/agent_auth -t <MANAGER_TAILNET_IP> -p '<ENROLLMENT_PASSWORD>' -A honeypot-vps
+3) Once the agent is active, add a localfile to the agent config pointing at the
+   Cowrie JSON log in the 'cowrie-data' docker volume
+   (/var/lib/docker/volumes/cowrie-data/_data/log/cowrie/cowrie.json) and check the
+   built-in Wazuh Cowrie decoders; if the event format does not match, author a
    custom decoder + rule in 03-siem/rules (that becomes 04-detecciones material).
 4) Plant canarytokens (canarytokens.org, manual): a fake AWS credentials file and
    a fake credential doc reachable by the honeypot, alerts to email.
+5) Sync the GCP VPC firewall with this script: the open rule must carry ONLY
+   22/23 bait now (decoys 80/445/3389/3306 removed by decision 2026-10-12).
 EOF
