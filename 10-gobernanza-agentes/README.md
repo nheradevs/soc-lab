@@ -1,33 +1,32 @@
 # 10-gobernanza-agentes - AI tooling governance
 
-The honeypot watches attackers; this phase watches **the watcher**: the AI coding agent(s) that operate the lab over SSH and shell. An agent that can edit files, run commands and reach MCP servers is another system in the threat model - so it gets the same treatment as any other: persistent policy, least-privilege configuration, deterministic controls, code review and a threat model.
+The honeypot watches attackers; this phase watches **the watcher**: the AI coding agent that operates my lab over SSH and shell. An agent that can edit files, run commands and reach MCP servers is just another system in my threat model, so I gave it the same treatment as everything else: a policy, least-privilege config, deterministic controls, code review and its own threat model.
 
-The practices here were distilled from security guidance for agentic coding tools (permissions modes, allow/ask/deny rules, hooks as deterministic gates, MCP trust, subagent scoping) and implemented on **OpenCode** (the lab uses OpenCode with a non-Anthropic model, so every concept was mapped to its equivalent, and two were found NOT to exist here - documented below).
+The practices here are adapted from the course "Claude Code Seguro" by Álvaro Chirou (Udemy). One honest wrinkle: I don't run Claude Code. I use OpenCode with a Qwen model, so every concept had to be mapped to its equivalent, and two things turned out not to work the same way here at all. Both are documented below because that mismatch was the real lesson.
 
 ## Controls implemented
 
 | Layer | Mechanism | Where | What it stops |
 |---|---|---|---|
-| Policy (persistent) | `AGENTS.md` 7-part security policy (data classification, non-negotiables, deny list, approved deps, verification commands, closing checklist) | project root (local), template here: `agent-policy.example.md` | agent drift between sessions; secret leakage by default |
-| Permissions (deterministic) | `permission` blocks: bash deny/ask patterns, `.env` family denied read+write, self-governance files (config, policy, plugins) ask-gated | project + global `opencode.json` | `rm -rf`-class commands, credential reads, agent weakening its own cage |
-| Hooks (deterministic, content-level) | one plugin, three guards on `tool.execute.before`: bash-firewall, secrets-scanner, env-protector (incl. bash-string `.env` detection) | example here: `security-hooks.example.ts` | secrets in written content; `.env` via `cat`/`cp`/`tar`/interpreters (permissions cannot see command content) |
-| Review | `/security-review` custom command (3-phase, confidence >= 80%, project-specific exclusions) | `.opencode/command/security-review.md` | AI-introduced regressions in infra code; it found 2 HIGH / 3 MEDIUM here, all remediated and verified |
-| Threat model | STRIDE over the whole pipeline including the agent context window itself | internal `threat.md` (publication by decision) | design blind spots (top risk found: attacker-controlled log content as prompt-injection input) |
-| Surface audit | MCP servers + subagent permissions mapped and scoped | sanitized: `agent-surface-audit.example.md` | unscoped third-party reach from read-only workers (memory poisoning / query egress) |
+| Policy (persistent) | `AGENTS.md` with a 7-part security policy: data classification, non-negotiables, deny list, approved deps, verification commands, closing checklist | project root (local copy), template here: `agent-policy.example.md` | agent drift between sessions; secret leakage by default |
+| Permissions (deterministic) | `permission` blocks: bash deny/ask patterns, `.env` family denied for read AND write, self-governance files (the config, the policy, the plugins) gated behind approval | project + global `opencode.json` | `rm -rf`-class commands, credential reads, and the agent quietly loosening its own cage |
+| Hooks (deterministic, content-level) | one plugin, three guards on `tool.execute.before`: bash-firewall, secrets-scanner, env-protector (including `.env` detection inside bash command strings) | example here: `security-hooks.example.ts` | secrets in written content; `.env` via `cat`/`cp`/`tar`/interpreters - permission patterns cannot see command content, the hooks can |
+| Review | `/security-review` custom command: 3 phases, confidence >= 80%, exclusions for my documented decisions | `.opencode/command/security-review.md` | regressions in my own infra code. It found 2 HIGH and 3 MEDIUM real issues; all five were fixed and re-verified |
+| Threat model | STRIDE over the whole pipeline, including the agent context window as its own trust boundary | internal `threat.md` | design blind spots. Top risk found: attacker-controlled log content as prompt-injection input |
+| Surface audit | every MCP server and subagent mapped with a trust verdict, then scoped | sanitized: `agent-surface-audit.example.md` | read-only subagents reaching write-capable tools (memory poisoning) or egress-capable ones |
 
 ## Porting notes (concept -> OpenCode reality)
 
-- Rule precedence is **order-based** (last match wins), not deny>ask>allow by type: the catch-all `"*"` goes first, exceptions after.
-- Permission patterns for `read`/`edit` do **not** gate the `bash` tool - a `cat .env` bypasses them by design. Hooks close that gap (found via a live test, not theory).
-- There is **no native OS sandbox** (`/sandbox`-style) in OpenCode today: isolation here is layers (policy, permissions, hooks) + running risky work inside a container when needed.
-- Hooks are TypeScript `tool.execute.before` handlers: throwing blocks the call (exit-code semantics replaced by exceptions).
-- Subagents inherit the same permission engine; per-agent blocks plus tool-name wildcards (`"mcpname_*": "deny"`) give per-agent MCP scoping.
-- Attribution to the source course will be added to this file after the author has reviewed the implementation (his brand, his call).
+- Rule precedence is order-based (last match wins), not deny>ask>allow by type: the catch-all `"*"` goes first and exceptions after it. Easy to get backwards if you come from the course's syntax.
+- Permission patterns for `read`/`edit` do not gate the `bash` tool. A `cat .env` bypasses them by design. I only found this by testing, and hooks close the gap. A config that looks secure and a config that is secure are different things.
+- There is no native OS sandbox in OpenCode today. Isolation here is layers (policy, permissions, hooks) plus running risky work in a container when needed.
+- Hooks are TypeScript `tool.execute.before` handlers: throwing an error blocks the call (no exit codes involved).
+- Subagents share the same permission engine; per-agent blocks with tool-name wildcards (`"server_*": "deny"`) give per-agent MCP scoping.
 
-## Findings-and-fixes summary (from `/security-review`, 2026-10-12)
+## Findings and fixes (from my run of `/security-review`, 2026-10-12)
 
-2 HIGH, 3 MEDIUM, all closed with before/after evidence in the project tracker: TLS-verification leakage into the public Telegram leg (fixed + behaviorally verified), a re-bootstrap variant that bound monitoring to `0.0.0.0` with default credentials (single-source-of-truth fixed), dead decoy ports (removed, GCP rule synced, externally verified), unpinned bootstrap supply chain (pinned/verified), enrollment secret printed by an unquoted heredoc (fixed). The audit also corrected one imported-once-wrong recommendation (metadata token enforcement is platform-specific - verify hardening steps against the target cloud, not against another cloud's docs).
+2 HIGH, 3 MEDIUM, all closed with before/after evidence: TLS verification leaking into the public Telegram leg (fixed, behaviorally verified), a bootstrap variant that bound monitoring to `0.0.0.0` with default credentials (replaced by a single source of truth), dead decoy ports (removed, GCP rule synced and externally verified), unpinned bootstrap installs (pinned or verified), and an enrollment secret printed by an unquoted heredoc (fixed). The same exercise corrected one of my own recommendations: metadata token enforcement (IMDSv2) is an AWS concept that does not exist in GCP. I had hardening steps "sounding right" until the platform docs said otherwise; the GCP-native fix was removing the service account from the honeypot VM instead. That one stayed in the record on purpose.
 
 ## Pre-push guard
 
-`pre-push.example.sh` - machine-enforced secret scanning at push time (gitleaks when installed, pattern fallback always). Install: copy to `.git/hooks/pre-push` and `chmod +x`.
+`pre-push.example.sh` runs secret scanning at push time: gitleaks when installed, a pattern fallback always. Install: copy to `.git/hooks/pre-push` and `chmod +x`.

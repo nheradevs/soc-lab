@@ -9,7 +9,7 @@
 
 Laboratorio SOC blue-team real: honeypot Cowrie en GCP (`miel26`) → SIEM Wazuh 4.14.7
 en `asgard` (ThinkPad always-on detrás de NAT) → dashboard, Grafana y alertas Telegram,
-unidos por Tailscale. Fases 01–09 (infra → report).
+unidos por Tailscale. Fases 01-09 (infra → report).
 
 Datos y su sensibilidad:
 

@@ -32,7 +32,7 @@ Verified against OpenSearch (SIEM query, mid-September 2026):
 | Distinct attacker source IPs | **58** |
 | Honeypot sessions | **732** |
 
-The bulk of the traffic is mass-scanner botnet activity: scripted SSH brute-force, fake logins accepted by Cowrie, recon commands (`uname -s -v -n -r -m`), and dropper-style command input — all recorded with zero risk to real services.
+The bulk of the traffic is mass-scanner botnet activity: scripted SSH brute-force, fake logins accepted by Cowrie, recon commands (`uname -s -v -n -r -m`), and dropper-style command input  -  all recorded with zero risk to real services.
 
 ![Captured alerts](../screenshots/04-alerts.png)
 
@@ -41,7 +41,7 @@ The bulk of the traffic is mass-scanner botnet activity: scripted SSH brute-forc
 Full write-up in [06-observaciones/2026-09-16_ssh-bruteforce-martian-spoofing.md](../06-observaciones/2026-09-16_ssh-bruteforce-martian-spoofing.md). Summary:
 
 - Two attacker IPs (`109.160.32.48`, `195.178.110.228`) ran an automated SSH dropper campaign against the honeypot: 190 connections, 158 fake logins, 150 commands in ~18 minutes from the noisiest source.
-- The same sources sent **martian packets**: frames arriving on the public interface claiming to come from `172.17.0.2` — the honeypot's own Docker bridge IP. The kernel dropped all of them.
+- The same sources sent **martian packets**: frames arriving on the public interface claiming to come from `172.17.0.2`  -  the honeypot's own Docker bridge IP. The kernel dropped all of them.
 - The traffic surge coincided with a **13.5-hour telemetry blackout** (07:33:59 → 21:38:08 UTC). Root cause chain: memory pressure on the 1 GB e2-micro during the spike, and `wazuh-agent` not enabled as a service, so nothing self-healed until a manual reboot.
 
 The incident is the lab's best artifact: it shows detection working (the campaign is fully logged up to the blackout), its own observability failure mode (a blind honeypot), and the recovery path.
@@ -50,8 +50,8 @@ The incident is the lab's best artifact: it shows detection working (the campaig
 
 Post-incident actions, documented with verification evidence in [08-endurecimiento](../08-endurecimiento/):
 
-- **Deliberate non-action.** Attacker IPs were *not* blocked in the VPC firewall — they are rotating botnet nodes, the honeypot's value is observing them, and containment already comes from the Cowrie sandbox.
-- **`wazuh-agent` enabled** via `systemctl` (it was installed but never enabled — the fix that closes the self-DoS recovery gap).
+- **Deliberate non-action.** Attacker IPs were *not* blocked in the VPC firewall  -  they are rotating botnet nodes, the honeypot's value is observing them, and containment already comes from the Cowrie sandbox.
+- **`wazuh-agent` enabled** via `systemctl` (it was installed but never enabled  -  the fix that closes the self-DoS recovery gap).
 - **VM resized** e2-micro → e2-small (2 GB) to absorb scan spikes.
 - **Real SSH (port 2222) restricted** to the operator's home IP in the GCP firewall; it had been leaking to `0.0.0.0/0` through the honeypot decoy rule. Only the fake services remain internet-facing.
 
