@@ -1,5 +1,5 @@
 ---
-description: Security review of the SOC lab workspace. Ported from the "Claude Code Seguro" (Álvaro Chirou) /security-review pattern: 3-phase review, lab-specific categories, false-positive exclusions, >=80% confidence threshold.
+description: 'Security review of the SOC lab workspace. Adapted from the "Claude Code Seguro" (Álvaro Chirou) /security-review pattern: 3-phase review, lab-specific categories, false-positive exclusions, >=80% confidence threshold.'
 ---
 
 # /security-review - blue-team code review for this repository
