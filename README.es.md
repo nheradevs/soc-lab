@@ -115,6 +115,14 @@ Oculté todo lo de la lista anterior, porque el informe reutiliza capturas del l
 
 El agente de IA con el que opero este laboratorio es parte del modelo de amenazas, así que le dediqué su propia fase de gobernanza: una política de seguridad de 7 partes (`AGENTS.md`), permisos de mínimo privilegio (patrones bash deny/ask, `.env` bloqueado en lectura y escritura, archivos de autogobierno protegidos para que el agente no afloje su propia jaula en silencio), un plugin de hooks que cubre lo que los patrones de permisos no ven (el contenido de mis comandos y escrituras), un comando `/security-review` adaptado del curso "Claude Code Seguro" (Álvaro Chirou) que me encontró 2 HIGH y 3 MEDIUM reales en mi propia infra, un pase STRIDE que trata la ventana de contexto del agente como frontera de confianza propia, y una auditoría de superficie MCP/subagentes con scoping por agente. Los cinco hallazgos quedaron corregidos y reverificados con evidencia antes/después. Las plantillas saneadas viven en `10-gobernanza-agentes/`.
 
+## Crédito donde corresponde
+
+El criterio de seguridad de la fase 10 no lo inventé acá. Sale del curso de Álvaro Chirou, [Claude Code Seguro: Programa con IA sin Riesgos de Seguridad](https://www.udemy.com/course/claude-code-para-ciberseguridad-blinda-tu-codigo/): la política persistente, el modelo de permisos allow/deny, los hooks a nivel de herramienta que los patrones de permisos no ven, el pase STRIDE, el scoping de MCP y subagentes, y la costumbre del `/security-review`.
+
+Chirou lo enseña con Claude Code. Yo uso OpenCode con un modelo Qwen, así que tomé sus bases y mapeé cada una a su equivalente acá; la fase 10 deja registradas las dos que no portaron (sandboxing y la taxonomía de modos de permisos) en lugar de fingir que sí.
+
+Las fases 01-09 ya estaban andando cuando hice el curso. Lo que cambió el curso es cómo endurezco: el método de revisión solo encontró 2 HIGH y 3 MEDIUM en infraestructura que yo ya daba por terminada, y las capas de permisos y hooks son lo que evita que el agente deshaga ese trabajo. Queda registrado en `10-gobernanza-agentes/README.md`, incluida la recomendación que tuve que descartar porque IMDSv2 es un concepto de AWS sin equivalente en GCP.
+
 ## Lo que el honeypot capturó
 
 Cifras verificadas el 2026-09-21 contra OpenSearch en asgard:

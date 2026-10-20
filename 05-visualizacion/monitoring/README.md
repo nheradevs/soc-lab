@@ -66,17 +66,17 @@ refuses to continue if it is missing or if the placeholder survives, because a
 stack that cannot scrape the honeypot raises `miel26_down` forever and teaches
 you to ignore a critical alert.
 
-## Alert delivery (read this before trusting the alerting)
+## Alert delivery
 
 Prometheus evaluates `prometheus/rules.yml` and there is **no Alertmanager** in
-this stack. Consequences, stated plainly:
+this stack. That has three consequences worth knowing before you trust it:
 
 - The rules surface in Grafana ("Prometheus alerts" panel) **only**. Nothing
   pages you, on any channel, for a disk filling up or the honeypot going down.
 - The Telegram path is the `tg-forwarder`, which carries Wazuh high-value events
   (Cowrie logins, command input, agent events). It does not see Prometheus
   alerts.
-- So infra coverage today is *visible on demand*, not *pushing*. Adding an
+- Infra coverage today is visible on demand, not pushing. Adding an
   Alertmanager (or routing these through the forwarder) is an open decision, and
   it needs explicit dependency approval per `AGENTS.md` §3.
 
