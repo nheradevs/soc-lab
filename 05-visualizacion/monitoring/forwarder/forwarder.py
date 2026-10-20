@@ -33,6 +33,7 @@ Robustness:
 import base64
 import hashlib
 import html
+import ipaddress
 import json
 import logging
 import os
@@ -54,7 +55,9 @@ OPENSEARCH_PASS = os.environ.get("OPENSEARCH_PASS", "")
 TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "")
 TG_CHAT_ID = os.environ.get("TG_CHAT_ID", "")
 DRY_RUN = os.environ.get("DRY_RUN", "true").strip().lower() in ("1", "true", "yes", "on")
-RULES = [r.strip() for r in os.environ.get("RULES", "100501,100504,501,502").split(",") if r.strip()]
+RULES = [r.strip() for r in os.environ.get(
+    "RULES", "100501,100504,100503,100510,100523,501,502"
+).split(",") if r.strip()]
 COOLDOWN_SECONDS = int(os.environ.get("COOLDOWN_SECONDS", "60"))
 POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL", "10"))
 
@@ -63,11 +66,24 @@ POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL", "10"))
 # Anything else is refused at startup: this program must never be pointed at a
 # remote host with the relaxed internal TLS context.
 _INTERNAL_HOSTS = ("localhost", "127.0.0.1", "::1")
+_TAILNET_NET = ipaddress.ip_network("100.64.0.0/10")
 
 
 def _is_internal_host(url):
-    host = urllib.parse.urlsplit(url).hostname or ""
-    return host in _INTERNAL_HOSTS or host.startswith("100.")
+    host = urllib.parse.urlsplit(url).hostname
+    if host is None:
+        # Bare host or IPv6 literal supplied without a scheme (e.g. "::1").
+        host = url
+    host = host.strip().strip("[]")
+    if host in _INTERNAL_HOSTS:
+        return True
+    try:
+        addr = ipaddress.ip_address(host)
+    except ValueError:
+        # Hostname (or garbage): never internal, so it never gets the relaxed
+        # TLS context. This rejects lookalikes such as "100.evil.com".
+        return False
+    return addr.version == 4 and addr in _TAILNET_NET
 
 
 if not _is_internal_host(OPENSEARCH_URL):
@@ -265,7 +281,7 @@ def build_message(src):
         return (
             f"\U0001F3A3 Cowrie fake login (L{esc(rule.get('level', '?'))})\n"
             f"\U0001F310 {esc(data.get('src_ip', '?'))}\n"
-            f"\U0001F464 {esc(data.get('username', '?'))} / {mask_secret(data.get('password'))}\n"
+            f"\U0001F464 {esc(data.get('username', '?'))} / {esc(mask_secret(data.get('password')))}\n"
             f"\U0001F4E1 {esc(data.get('protocol', '?'))} \u2192 port {esc(data.get('dst_port', '?'))}\n"
             f"\U0001F550 {ts} UTC"
         )

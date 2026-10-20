@@ -100,19 +100,26 @@ sleep 15s, continue. SIGTERM → clean exit 0.
 
 Forwarded rules (default):
 
-| rule | meaning |
-|------|---------|
-| 100501 | Cowrie fake login |
-| 100504 | Command typed in a fake session |
-| 501 / 502 | Wazuh agent connect / event (miel26 agent liveness) |
+| rule | level | meaning |
+|------|------:|---------|
+| 100501 | 10 | Cowrie fake login |
+| 100504 | 7 | Command typed in a fake session |
+| 100503 | 9 | `chpasswd` attempted in a fake session |
+| 100510 | 9 | Telnet exploit succeeded |
+| 100523 | 12 | Brute-force: 5+ failed fake logins in 300s |
+| 501 / 502 | 3 | Wazuh agent connect / event (miel26 agent liveness) |
+
+The three high-severity ids were added because the default set used to stop at the
+login and command events, so the lab's worst detections (telnet exploit, brute
+force, credential change) never reached Telegram.
 
 ## Tuning
 
 Edit `~/monitoring/.env` on asgard, then
 `docker compose up -d tg-forwarder` (re-reads env on recreate):
 
-- `RULES=100501,100504,501,502`: comma-separated rule ids. Find more ids in
-  the Wazuh dashboard (Rules) or in OpenSearch:
+- `RULES=100501,100504,100503,100510,100523,501,502`: comma-separated rule ids.
+  Find more ids in the Wazuh dashboard (Rules) or in OpenSearch:
   `rule.id` in `wazuh-alerts-4.x-*`.
 - `COOLDOWN_SECONDS=60`: silence per (source ip, rule). Raise it if a
   particular attacker pair is spamming.
