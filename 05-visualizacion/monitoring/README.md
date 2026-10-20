@@ -4,7 +4,7 @@ Infrastructure-health monitoring for the SOC lab. Covers:
 
 - **Asgard** (SIEM/indexer host): disk, RAM, load, the indexer filling up
   would silently stop alert indexing, so this is the biggest blind spot.
-- **miel26** (GCP honeypot, e2-small): up/down, RAM, conntrack, self-DoS
+- **miel26** (GCP honeypot, e2-small): up/down, RAM, disk, conntrack, self-DoS
   watch under heavy attack.
 - **Wazuh → Telegram forwarder**, the high-value events only (Cowrie fake
   logins, command input, agent events), NOT the ~10k alerts/day flood.
@@ -58,6 +58,27 @@ It is not in this compose file. asgard scrapes it over the tailnet
 network-reachable monitoring port is the tailnet interface, an attacker on
 the public internet must not be able to read host metrics or kill the
 exporter.
+
+The address is deliberately redacted in the repo, so `01-infra/setup-laptop.sh`
+requires `MIEL26_TAILNET_IP` in its config block, validates that it falls inside
+`100.64.0.0/10`, and substitutes it into the copied `prometheus.yml`. The script
+refuses to continue if it is missing or if the placeholder survives, because a
+stack that cannot scrape the honeypot raises `miel26_down` forever and teaches
+you to ignore a critical alert.
+
+## Alert delivery (read this before trusting the alerting)
+
+Prometheus evaluates `prometheus/rules.yml` and there is **no Alertmanager** in
+this stack. Consequences, stated plainly:
+
+- The rules surface in Grafana ("Prometheus alerts" panel) **only**. Nothing
+  pages you, on any channel, for a disk filling up or the honeypot going down.
+- The Telegram path is the `tg-forwarder`, which carries Wazuh high-value events
+  (Cowrie logins, command input, agent events). It does not see Prometheus
+  alerts.
+- So infra coverage today is *visible on demand*, not *pushing*. Adding an
+  Alertmanager (or routing these through the forwarder) is an open decision, and
+  it needs explicit dependency approval per `AGENTS.md` §3.
 
 ## How the forwarder works
 

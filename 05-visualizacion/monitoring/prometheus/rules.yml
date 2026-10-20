@@ -1,7 +1,14 @@
+# Prometheus alerting rules for the lab infra.
+#
+# DELIVERY: there is no Alertmanager in this stack, so these rules are evaluated
+# and surfaced in Grafana ("Prometheus alerts" panel) ONLY. Nothing pages you.
+# The Telegram path carries Wazuh high-value events through the tg-forwarder,
+# not these rules. Treat infra coverage as visible-on-demand until an
+# Alertmanager is added.
+
 groups:
   - name: lab-infra
-    rules:
-      # Asgard root disk: the indexer filling up silently stops alert indexing.
+    rules:      # Asgard root disk: the indexer filling up silently stops alert indexing.
       - alert: asgard_disk_low
         expr: node_filesystem_avail_bytes{job="node-asgard",mountpoint="/",fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{job="node-asgard",mountpoint="/",fstype!~"tmpfs|overlay"} < 0.20
         for: 10m
@@ -29,6 +36,17 @@ groups:
         annotations:
           summary: "miel26 (honeypot) exporter unreachable"
           description: "miel26 node-exporter has been down for 5m, honeypot may be self-DoS'd or offline."
+
+      # miel26 disk: a full disk stops Cowrie writing its JSON log, so the
+      # honeypot keeps taking connections while going blind.
+      - alert: miel26_disk_low
+        expr: node_filesystem_avail_bytes{job="node-miel26",mountpoint="/",fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{job="node-miel26",mountpoint="/",fstype!~"tmpfs|overlay"} < 0.20
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "miel26 root disk below 20% free"
+          description: "miel26 / free space is {{ $value | humanizePercentage }}. Cowrie logging is at risk."
 
       # miel26 is an e2-small (~2 GiB): watch RAM under heavy attack.
       - alert: miel26_mem_low
