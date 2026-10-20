@@ -6,7 +6,7 @@ Final report and portfolio piece for the home SOC lab: what was built, what it c
 
 A small but fully working SOC pipeline across two machines:
 
-- **miel26** (GCP e2 VM): Cowrie low-interaction honeypot exposing fake SSH, Telnet, HTTP, SMB, RDP and MySQL services to the internet.
+- **miel26** (GCP e2 VM): Cowrie low-interaction honeypot exposing fake SSH and Telnet to the internet. The HTTP, SMB, RDP and MySQL modules exist upstream but are not enabled here, and the decoy firewall ports opened for them were removed by the 2026-10-12 security review.
 - **asgard** (home server): Wazuh SIEM ingesting honeypot telemetry, plus Prometheus + Grafana monitoring of both hosts and a Wazuh→Telegram alert forwarder.
 
 Iterated in eight phases, each documented in its own folder:

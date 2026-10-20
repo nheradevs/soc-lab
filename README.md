@@ -108,7 +108,7 @@ I hid the cloud project name, the firewall rule source ranges, and the instance 
 
 The final write-up that assembles phases 01-08 into a single portfolio piece: what was built, what was captured, what was learned, and how the loop keeps running.
 
-![Final state of the lab](screenshots/09-state.png)
+![Final state of the lab](screenshots/09-report.png)
 I hid everything in the checklist below, since the report reuses lab screenshots.
 
 ### 10-gobernanza-agentes

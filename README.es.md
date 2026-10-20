@@ -108,7 +108,7 @@ En esta captura oculté el nombre del proyecto en la nube, los rangos de origen 
 
 El informe final que ensambla las fases 01-08 en una sola pieza de portafolio: qué se construyó, qué se capturó, qué se aprendió y cómo sigue el bucle.
 
-![Estado final del laboratorio](screenshots/09-state.png)
+![Estado final del laboratorio](screenshots/09-report.png)
 Oculté todo lo de la lista anterior, porque el informe reutiliza capturas del laboratorio.
 
 ### 10-gobernanza-agentes
