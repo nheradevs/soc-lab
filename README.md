@@ -121,7 +121,7 @@ The security thinking behind phase 10 was not invented here. It comes from Álva
 
 Chirou teaches it with Claude Code. I run OpenCode with a Qwen model, so I took his bases and mapped each one to the equivalent here; phase 10 records the two that did not port (sandboxing, and the permission-mode taxonomy) instead of pretending they did.
 
-Phases 01-09 were already running when I took the course. What the course changed is how I harden: the review method alone found 2 HIGH and 3 MEDIUM issues in infrastructure I had already called done, and the permission and hook layers are what stop the agent from undoing that work. Recorded in the open at `10-gobernanza-agentes/README.md`, including the recommendation I had to throw away because IMDSv2 is an AWS concept with no GCP equivalent.
+Phases 01-09 were already running when I took the course, and I would have told you they were hardened: ufw rules, ports reachable only over the tailnet, pinned image tags, everything sensitive bound to loopback. Applying the course's review method showed that I was wrong. It found 2 HIGH and 3 MEDIUM issues in infrastructure I had already called done, including a TLS context that turned certificate verification off on the public leg to Telegram. That is the honest credit: the course is what turned "I think it is secure" into something I can check. What I took from it is a review procedure I can re-run on my own work, and it is why the agent now runs inside permissions and hooks instead of on trust. All of it is recorded in the open at `10-gobernanza-agentes/README.md`, including the recommendation I had to throw away because IMDSv2 is an AWS concept with no GCP equivalent.
 
 ## What the honeypot caught
 
