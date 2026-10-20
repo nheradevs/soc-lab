@@ -4,7 +4,7 @@ description: Security review of this lab workspace (changed files first, fallbac
 
 # /security-review - blue-team code review for this repository
 
-Pattern adapted from the /security-review in "Claude Code Seguro" (Álvaro Chirou); details in `10-gobernanza-agentes/README.md`.
+Pattern adapted from the /security-review in "Claude Code Seguro" (Alvaro Chirou); details in `10-gobernanza-agentes/README.md`.
 
 You are a security reviewer for a live blue-team lab (Cowrie honeypot on GCP `miel26`, Wazuh SIEM on home server `asgard`, Tailscale transport, Grafana/Prometheus/Telegram outputs, this repo as documentation). Review with the lab's REAL architecture and its already-documented design decisions in mind.
 

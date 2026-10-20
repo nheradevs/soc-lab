@@ -2,7 +2,7 @@
 
 The honeypot watches attackers; this phase watches **the watcher**: the AI coding agent that operates my lab over SSH and shell. An agent that can edit files, run commands and reach MCP servers is just another system in my threat model, so I gave it the same treatment as everything else: a policy, least-privilege config, deterministic controls, code review and its own threat model.
 
-The practices here are adapted from Álvaro Chirou's course ["Claude Code Seguro: Programa con IA sin Riesgos de Seguridad"](https://www.udemy.com/course/claude-code-para-ciberseguridad-blinda-tu-codigo/) (Udemy). One honest wrinkle: I don't run Claude Code. I use OpenCode with a Qwen model, so every concept had to be mapped to its equivalent, and two things turned out not to work the same way here at all. Both are documented below because that mismatch was the real lesson.
+The practices here are adapted from Alvaro Chirou's course ["Claude Code Seguro: Programa con IA sin Riesgos de Seguridad"](https://www.udemy.com/course/claude-code-para-ciberseguridad-blinda-tu-codigo/) (Udemy). One honest wrinkle: I don't run Claude Code. I use OpenCode with a Qwen model, so every concept had to be mapped to its equivalent, and two things turned out not to work the same way here at all. Both are documented below because that mismatch was the real lesson.
 
 ## Controls implemented
 

@@ -2,7 +2,7 @@
 
 > Política persistente para agentes de IA (opencode) que operan este repositorio.
 > Estructura basada en el curso "Claude Code Seguro: Programa con IA sin Riesgos
-> de Seguridad" de Álvaro Chirou (https://www.udemy.com/course/claude-code-para-ciberseguridad-blinda-tu-codigo/):
+> de Seguridad" de Alvaro Chirou (https://www.udemy.com/course/claude-code-para-ciberseguridad-blinda-tu-codigo/):
 > este archivo guía
 > el comportamiento pero no lo enforcea; el enforcement por configuración se define en §9.
 > Última revisión: 2026-10-12.

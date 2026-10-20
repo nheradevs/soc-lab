@@ -1,7 +1,7 @@
 // security-hooks.ts - Deterministic defensive guards for OpenCode.
 //
 // Port of the three PreToolUse hooks from the course
-// "Claude Code Seguro" (Álvaro Chirou), module 7:
+// "Claude Code Seguro" (Alvaro Chirou), module 7:
 //   - bash-firewall:  blocks destructive shell patterns
 //   - secrets-scanner: blocks secret-like literals in commands and file writes
 //   - env-protector:  keeps .env-family content out of the agent context,
