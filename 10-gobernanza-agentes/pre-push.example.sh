@@ -9,7 +9,7 @@ if command -v gitleaks >/dev/null 2>&1; then
 else
   echo "gitleaks not installed: running pattern fallback"
   PATTERNS='ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,}|gsk_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35}|xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----'
-  HITS=$(git ls-files -z | xargs -0 grep -lInE "$PATTERNS" 2>/dev/null | grep -vE 'security-hooks|agent-policy|pre-push|README|\.example|\.disabled' || true)
+  HITS=$(git ls-files -z | xargs -0 grep -lInE "$PATTERNS" 2>/dev/null | grep -vE 'security-hooks|agent-policy|pre-push|\.disabled' || true)
   if [ -n "$HITS" ]; then
     echo "BLOCKED: secret-shaped strings found:"; echo "$HITS"; exit 1
   fi

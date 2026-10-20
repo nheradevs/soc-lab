@@ -2,7 +2,7 @@
 
 The honeypot watches attackers; this phase watches **the watcher**: the AI coding agent that operates my lab over SSH and shell. An agent that can edit files, run commands and reach MCP servers is just another system in my threat model, so I gave it the same treatment as everything else: a policy, least-privilege config, deterministic controls, code review and its own threat model.
 
-The practices here are adapted from the course "Claude Code Seguro" by Álvaro Chirou (Udemy). One honest wrinkle: I don't run Claude Code. I use OpenCode with a Qwen model, so every concept had to be mapped to its equivalent, and two things turned out not to work the same way here at all. Both are documented below because that mismatch was the real lesson.
+The practices here are adapted from Álvaro Chirou's course ["Claude Code Seguro: Programa con IA sin Riesgos de Seguridad"](https://www.udemy.com/course/claude-code-para-ciberseguridad-blinda-tu-codigo/) (Udemy). One honest wrinkle: I don't run Claude Code. I use OpenCode with a Qwen model, so every concept had to be mapped to its equivalent, and two things turned out not to work the same way here at all. Both are documented below because that mismatch was the real lesson.
 
 ## Controls implemented
 
@@ -25,7 +25,7 @@ The practices here are adapted from the course "Claude Code Seguro" by Álvaro C
 
 ## Findings and fixes (from my run of `/security-review`, 2026-10-12)
 
-2 HIGH, 3 MEDIUM, all closed with before/after evidence: TLS verification leaking into the public Telegram leg (fixed, behaviorally verified), a bootstrap variant that bound monitoring to `0.0.0.0` with default credentials (replaced by a single source of truth), dead decoy ports (removed, GCP rule synced and externally verified), unpinned bootstrap installs (pinned or verified), and an enrollment secret printed by an unquoted heredoc (fixed). The same exercise corrected one of my own recommendations: metadata token enforcement (IMDSv2) is an AWS concept that does not exist in GCP. I had hardening steps "sounding right" until the platform docs said otherwise; the GCP-native fix was removing the service account from the honeypot VM instead. That one stayed in the record on purpose.
+I ran this expecting a clean pass, on a lab I already considered hardened. It came back with 2 HIGH, 3 MEDIUM, all closed with before/after evidence: TLS verification leaking into the public Telegram leg (fixed, behaviorally verified), a bootstrap variant that bound monitoring to `0.0.0.0` with default credentials (replaced by a single source of truth), dead decoy ports (removed, GCP rule synced and externally verified), unpinned bootstrap installs (pinned or verified), and an enrollment secret printed by an unquoted heredoc (fixed). The same exercise corrected one of my own recommendations: metadata token enforcement (IMDSv2) is an AWS concept that does not exist in GCP. I had hardening steps "sounding right" until the platform docs said otherwise; the GCP-native fix was removing the service account from the honeypot VM instead. That one stayed in the record on purpose.
 
 ## Pre-push guard
 

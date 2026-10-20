@@ -108,12 +108,20 @@ I hid the cloud project name, the firewall rule source ranges, and the instance 
 
 The final write-up that assembles phases 01-08 into a single portfolio piece: what was built, what was captured, what was learned, and how the loop keeps running.
 
-![Final state of the lab](screenshots/09-state.png)
+![Final state of the lab](screenshots/09-report.png)
 I hid everything in the checklist below, since the report reuses lab screenshots.
 
 ### 10-gobernanza-agentes
 
 The AI agent I use to operate this lab is part of the threat model, so I gave it its own governance phase: a 7-part security policy (`AGENTS.md`), least-privilege permissions (bash deny/ask patterns, `.env` blocked for read and write, self-governance files gated so the agent cannot quietly loosen its own cage), a hooks plugin that covers what permission patterns cannot see (the content of my commands and writes), a `/security-review` command adapted from the course "Claude Code Seguro" (Álvaro Chirou) that found 2 HIGH and 3 MEDIUM real issues in my own infra, a STRIDE pass that treats the agent's context window as its own trust boundary, and an MCP/subagent surface audit with per-agent scoping. All five findings were fixed and re-verified with before/after evidence. Sanitized templates live in `10-gobernanza-agentes/`.
+
+## Credit where it's due
+
+The security thinking behind phase 10 was not invented here. It comes from Álvaro Chirou's course [Claude Code Seguro: Programa con IA sin Riesgos de Seguridad](https://www.udemy.com/course/claude-code-para-ciberseguridad-blinda-tu-codigo/): the persistent policy file, the allow/deny permission model, the tool-level hooks that permission patterns cannot see, the STRIDE pass, the MCP and subagent scoping, and the `/security-review` habit.
+
+Chirou teaches it with Claude Code. I run OpenCode with a Qwen model, so I took his bases and mapped each one to the equivalent here; phase 10 records the two that did not port (sandboxing, and the permission-mode taxonomy) instead of pretending they did.
+
+Phases 01-09 were already running when I took the course, and I would have told you they were hardened: ufw rules, ports reachable only over the tailnet, pinned image tags, everything sensitive bound to loopback. Applying the course's review method showed that I was wrong. It found 2 HIGH and 3 MEDIUM issues in infrastructure I had already called done, including a TLS context that turned certificate verification off on the public leg to Telegram. That is the honest credit: the course is what turned "I think it is secure" into something I can check. What I took from it is a review procedure I can re-run on my own work, and it is why the agent now runs inside permissions and hooks instead of on trust. All of it is recorded in the open at `10-gobernanza-agentes/README.md`, including the recommendation I had to throw away because IMDSv2 is an AWS concept with no GCP equivalent.
 
 ## What the honeypot caught
 

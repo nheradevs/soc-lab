@@ -4,7 +4,7 @@ Infrastructure-health monitoring for the SOC lab. Covers:
 
 - **Asgard** (SIEM/indexer host): disk, RAM, load, the indexer filling up
   would silently stop alert indexing, so this is the biggest blind spot.
-- **miel26** (GCP honeypot, e2-small): up/down, RAM, conntrack, self-DoS
+- **miel26** (GCP honeypot, e2-small): up/down, RAM, disk, conntrack, self-DoS
   watch under heavy attack.
 - **Wazuh → Telegram forwarder**, the high-value events only (Cowrie fake
   logins, command input, agent events), NOT the ~10k alerts/day flood.
@@ -59,6 +59,27 @@ network-reachable monitoring port is the tailnet interface, an attacker on
 the public internet must not be able to read host metrics or kill the
 exporter.
 
+The address is deliberately redacted in the repo, so `01-infra/setup-laptop.sh`
+requires `MIEL26_TAILNET_IP` in its config block, validates that it falls inside
+`100.64.0.0/10`, and substitutes it into the copied `prometheus.yml`. The script
+refuses to continue if it is missing or if the placeholder survives, because a
+stack that cannot scrape the honeypot raises `miel26_down` forever and teaches
+you to ignore a critical alert.
+
+## Alert delivery
+
+Prometheus evaluates `prometheus/rules.yml` and there is **no Alertmanager** in
+this stack. That has three consequences worth knowing before you trust it:
+
+- The rules surface in Grafana ("Prometheus alerts" panel) **only**. Nothing
+  pages you, on any channel, for a disk filling up or the honeypot going down.
+- The Telegram path is the `tg-forwarder`, which carries Wazuh high-value events
+  (Cowrie logins, command input, agent events). It does not see Prometheus
+  alerts.
+- Infra coverage today is visible on demand, not pushing. Adding an
+  Alertmanager (or routing these through the forwarder) is an open decision, and
+  it needs explicit dependency approval per `AGENTS.md` §3.
+
 ## How the forwarder works
 
 Wazuh ≥ 4.8 removed `GET /alerts` from the manager API, so the forwarder
@@ -79,19 +100,26 @@ sleep 15s, continue. SIGTERM → clean exit 0.
 
 Forwarded rules (default):
 
-| rule | meaning |
-|------|---------|
-| 100501 | Cowrie fake login |
-| 100504 | Command typed in a fake session |
-| 501 / 502 | Wazuh agent connect / event (miel26 agent liveness) |
+| rule | level | meaning |
+|------|------:|---------|
+| 100501 | 10 | Cowrie fake login |
+| 100504 | 7 | Command typed in a fake session |
+| 100503 | 9 | `chpasswd` attempted in a fake session |
+| 100510 | 9 | Telnet exploit succeeded |
+| 100523 | 12 | Brute-force: 5+ failed fake logins in 300s |
+| 501 / 502 | 3 | Wazuh agent connect / event (miel26 agent liveness) |
+
+The three high-severity ids were added because the default set used to stop at the
+login and command events, so the lab's worst detections (telnet exploit, brute
+force, credential change) never reached Telegram.
 
 ## Tuning
 
 Edit `~/monitoring/.env` on asgard, then
 `docker compose up -d tg-forwarder` (re-reads env on recreate):
 
-- `RULES=100501,100504,501,502`: comma-separated rule ids. Find more ids in
-  the Wazuh dashboard (Rules) or in OpenSearch:
+- `RULES=100501,100504,100503,100510,100523,501,502`: comma-separated rule ids.
+  Find more ids in the Wazuh dashboard (Rules) or in OpenSearch:
   `rule.id` in `wazuh-alerts-4.x-*`.
 - `COOLDOWN_SECONDS=60`: silence per (source ip, rule). Raise it if a
   particular attacker pair is spamming.

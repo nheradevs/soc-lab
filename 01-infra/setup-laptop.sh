@@ -3,6 +3,14 @@
 # Usage: sudo bash 01-infra/setup-laptop.sh
 set -euo pipefail
 
+# --- Configuration: fill before running ----------------------------------------
+# Tailscale address of the honeypot (miel26), from 'tailscale ip -4' on that VPS.
+# Required for the 'full' profile: the monitoring stack scrapes it over the
+# tailnet. The repo carries a redacted placeholder, so the bootstrap substitutes
+# this value; without it the node-miel26 job can never come up and the
+# miel26_down alert fires forever.
+MIEL26_TAILNET_IP=""
+
 echo "=== 1. Sanity checks ==="
 # Root and the exact target release are required before any mutation.
 if [ "$EUID" -ne 0 ]; then
@@ -29,6 +37,16 @@ else
 fi
 echo "Detected RAM: ${MEM_GB} GB (${MEM_KB} KB)"
 echo "Profile: ${PROFILE} (full adds Grafana + Prometheus + node_exporter)"
+
+# Validate the honeypot address here, before any mutation: 100.64.0.0/10 is the
+# only range a Tailscale IPv4 address can live in.
+if [ "$PROFILE" = "full" ]; then
+  if ! printf '%s' "$MIEL26_TAILNET_IP" | grep -Eq '^100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9]{1,3}\.[0-9]{1,3}$'; then
+    echo "ERROR: MIEL26_TAILNET_IP must be the honeypot's Tailscale address inside 100.64.0.0/10, got: '${MIEL26_TAILNET_IP}'" >&2
+    echo "       Get it on miel26 with 'tailscale ip -4' and fill the config block at the top of this script." >&2
+    exit 1
+  fi
+fi
 
 echo "=== 3. Always-on: no sleep/suspend, lid ignored ==="
 # The machine is an always-on server; it must survive lid close and unplug.
@@ -126,6 +144,13 @@ if [ "$PROFILE" = "full" ]; then
   mkdir -p /opt/soc-lab
   cp -a "$MONITORING_SRC" /opt/soc-lab/monitoring
   cd /opt/soc-lab/monitoring
+  # The versioned prometheus.yml carries a redacted placeholder so the repo never
+  # publishes the tailnet address; substitute the real one here.
+  sed -i "s/100\.x\.x\.x:9100/${MIEL26_TAILNET_IP}:9100/" prometheus/prometheus.yml
+  if grep -q '100\.x\.x\.x' prometheus/prometheus.yml; then
+    echo "ERROR: placeholder still present in prometheus.yml; refusing to start a stack that cannot scrape." >&2
+    exit 1
+  fi
   # Secrets are generated straight into the 0600 file, never echoed (AGENTS.md §2.1).
   if [ ! -f .env ]; then
     umask 077
