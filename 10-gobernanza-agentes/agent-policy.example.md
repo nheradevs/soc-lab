@@ -17,7 +17,7 @@ Datos y su sensibilidad:
 
 - **SECRETO**: tokens (bot de Telegram, API de Wazuh, admin de Grafana), contraseñas,
   IP pública del hogar, nombre/ID del proyecto cloud. Solo viven en `~/monitoring/.env`
-  en asgard (chmod 600) o en el cofre del operador. Nunca en este repositorio.
+  en asgard (chmod 600) o en el cofre de la operadora. Nunca en este repositorio.
 - **CONFIDENCIAL**: user/password de víctimas capturadas por Cowrie (siempre enmascaradas,
   formato `p******`), direcciones tailnet (100.x.x.x), IPs internas.
 - **PÚBLICO-DE-LAB**: IPs de atacantes, TTPs, reglas y detecciones.

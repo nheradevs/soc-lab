@@ -121,7 +121,7 @@ El criterio de seguridad de la fase 10 no lo inventé acá. Sale del curso de Al
 
 Chirou lo enseña con Claude Code. Yo uso OpenCode con un modelo Qwen, así que tomé sus bases y mapeé cada una a su equivalente acá; la fase 10 deja registradas las dos que no portaron (sandboxing y la taxonomía de modos de permisos) en lugar de fingir que sí.
 
-Las fases 01-09 ya estaban andando cuando hice el curso, y te habría dicho que estaban endurecidas: reglas de ufw, puertos alcanzables sólo por el tailnet, tags de imagen fijos, todo lo sensible atado a loopback. Aplicar el método de revisión del curso me demostró que estaba equivocado: encontró 2 HIGH y 3 MEDIUM en infraestructura que yo ya daba por terminada, incluido un contexto TLS que desactivaba la verificación de certificados en el tramo público hacia Telegram. Ese es el crédito honesto: el curso es lo que convirtió "creo que está seguro" en algo que puedo verificar. El curso me dio un procedimiento de revisión que puedo volver a correr sobre mi propio trabajo, y es la razón por la que el agente ahora corre dentro de permisos y hooks en vez de a la confianza. Todo queda registrado en `10-gobernanza-agentes/README.md`, incluida la recomendación que tuve que descartar porque IMDSv2 es un concepto de AWS sin equivalente en GCP.
+Las fases 01-09 ya estaban andando cuando hice el curso, y te habría dicho que estaban endurecidas: reglas de ufw, puertos alcanzables sólo por el tailnet, tags de imagen fijos, todo lo sensible atado a loopback. Aplicar el método de revisión del curso me demostró que estaba equivocada: encontró 2 HIGH y 3 MEDIUM en infraestructura que yo ya daba por terminada, incluido un contexto TLS que desactivaba la verificación de certificados en el tramo público hacia Telegram. Ese es el crédito honesto: el curso es lo que convirtió "creo que está seguro" en algo que puedo verificar. El curso me dio un procedimiento de revisión que puedo volver a correr sobre mi propio trabajo, y es la razón por la que el agente ahora corre dentro de permisos y hooks en vez de a la confianza. Todo queda registrado en `10-gobernanza-agentes/README.md`, incluida la recomendación que tuve que descartar porque IMDSv2 es un concepto de AWS sin equivalente en GCP.
 
 ## Lo que el honeypot capturó
 
@@ -155,7 +155,7 @@ Antes de publicar cualquier captura de este laboratorio, revisarla contra esta l
 - [ ] IP pública del honeypot: consola de la nube, reglas de firewall, páginas de instancia.
 - [ ] Direcciones Tailscale (100.x.x.x) en dashboards, métricas y payloads de alertas.
 - [ ] Direcciones de la LAN de la casa.
-- [ ] IP pública del operador: aparece en las reglas del firewall VPC.
+- [ ] IP pública de la operadora: aparece en las reglas del firewall VPC.
 - [ ] Tokens y contraseñas: contraseña admin de Grafana, token y chat ID del bot de Telegram, credenciales de la API de Wazuh.
 - [ ] Nombres de proyectos en la nube.
 - [ ] Nombres de usuario o cuentas personales.
